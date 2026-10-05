@@ -1,0 +1,1359 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="משכנתא לעם: כלים חינמיים להבנת המשכנתא – סימולטור, בדיקת מחזור והשוואת הצעות, בעברית פשוטה.">
+<style>html{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>משכנתא לעם</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Secular+One&display=swap">
+<style>
+/* Layout: two columns on desktop (inputs on the right, sticky results on the left), one column on phones */
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --surface-2:#eaf1ef; --ink:#13201e; --muted:#566663; --line:#d6e0dd;
+  --accent:#0b6b5c; --accent-ink:#ffffff; --accent-soft:#d8ece7;
+  --s-good:#3b82c4; --s-base:#0b6b5c; --s-hard:#d1702a;
+  --ok:#2e7d4a; --ok-soft:#e1f2e6; --warn:#a86a12; --warn-soft:#fbf0dc; --bad:#b33a2e; --bad-soft:#f9e3e0;
+  --display:"Secular One","IBM Plex Sans Hebrew",Arial,sans-serif;
+  --body:"IBM Plex Sans Hebrew",Arial,"Segoe UI",sans-serif;
+  --r:14px; --c-v1l:#8a6fc2; --c-v1z:#b07fb8; --c-v2l:#4f9a94; --c-v2z:#7aa35a;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1716; --surface:#16211f; --surface-2:#1c2a28; --ink:#e6efed; --muted:#9db0ac; --line:#2a3a37;
+  --accent:#3fbfa6; --accent-ink:#06201b; --accent-soft:#173a34;
+  --s-good:#6fb0ee; --s-base:#3fbfa6; --s-hard:#f0954f;
+  --ok:#5fc483; --ok-soft:#173225; --warn:#e5ad4f; --warn-soft:#352a14; --bad:#f07a6c; --bad-soft:#3a1d1a;
+  --c-v1l:#a991e0; --c-v1z:#d29fd9; --c-v2l:#6cc1ba; --c-v2z:#9ccc7a;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1716; --surface:#16211f; --surface-2:#1c2a28; --ink:#e6efed; --muted:#9db0ac; --line:#2a3a37;
+  --accent:#3fbfa6; --accent-ink:#06201b; --accent-soft:#173a34;
+  --s-good:#6fb0ee; --s-base:#3fbfa6; --s-hard:#f0954f;
+  --ok:#5fc483; --ok-soft:#173225; --warn:#e5ad4f; --warn-soft:#352a14; --bad:#f07a6c; --bad-soft:#3a1d1a;
+  --c-v1l:#a991e0; --c-v1z:#d29fd9; --c-v2l:#6cc1ba; --c-v2z:#9ccc7a;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;direction:rtl}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.2;text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;display:inline-block}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;padding-block:8px 18px}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{width:44px;height:44px;border-radius:12px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--display);font-size:24px}
+.brand h1{font-size:28px}
+.brand p{margin:0;color:var(--muted);font-size:15px}
+.tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:999px;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:8px 16px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:500}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* grid */
+.grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:920px){.grid{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}
+  .results{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+.step{display:flex;align-items:baseline;gap:10px;margin-bottom:14px}
+.step b{font-family:var(--display);font-weight:400;color:var(--accent);font-size:22px}
+.step h2{font-size:21px}
+.hint{color:var(--muted);font-size:14px;margin:4px 0 0}
+
+/* fields */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+.field label{font-weight:600}
+.input{border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px;width:100%;font-size:18px}
+.input:focus{border-color:var(--accent);outline:none}
+.money{position:relative}
+.money .input{padding-right:36px;padding-left:12px;direction:ltr;text-align:right}
+.money span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px}
+.range-row{display:flex;align-items:center;gap:14px}
+.range-row input[type=range]{flex:1;accent-color:var(--accent)}
+.range-val{min-width:76px;text-align:center;font-weight:700;background:var(--accent-soft);border-radius:8px;padding:4px 8px}
+
+/* baskets */
+.baskets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+@media (max-width:480px){.baskets{grid-template-columns:1fr}}
+.basket{border:1.5px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:var(--surface);text-align:right;display:flex;flex-direction:column;gap:4px}
+.basket:hover{border-color:var(--accent)}
+.basket[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.basket strong{font-size:15.5px}
+.basket small{color:var(--muted);font-size:13.5px;line-height:1.45}
+.mixbar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:4px;gap:2px}
+.mixbar i{display:block;height:100%}
+
+/* tracks */
+.tracks{display:flex;flex-direction:column;gap:10px}
+.trow{display:grid;grid-template-columns:minmax(0,2.8fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 36px;gap:8px;align-items:end;padding:10px;border-radius:10px;background:var(--surface-2)}
+.trow label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:2px}
+.trow .input{font-size:15px;padding:7px 8px}
+.trow select.input{padding-inline:6px}
+.trow .tnum{direction:ltr;text-align:right}
+.rm{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:20px;height:36px;border-radius:8px}
+.rm:hover{background:var(--bad-soft);color:var(--bad)}
+@media (max-width:560px){.trow{grid-template-columns:repeat(3,minmax(0,1fr)) 36px}.trow .tsel{grid-column:1/-1}}
+.tfoot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+.btn{border:1.5px solid var(--accent);background:transparent;color:var(--accent);border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:600}
+.btn:hover{background:var(--accent-soft)}
+.sum{font-weight:600;font-size:14.5px}
+.sum.bad{color:var(--bad)}
+.note{font-size:13.5px;color:var(--muted);background:var(--surface-2);border-radius:10px;padding:10px 12px;margin-top:12px}
+
+/* scenarios */
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px;cursor:pointer;text-align:right}
+.sbtn[aria-pressed="true"]{border-color:currentColor;background:var(--surface-2)}
+.sbtn .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:6px}
+.sbtn strong{color:var(--ink)}
+.sbtn small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4;margin-top:2px}
+@media (max-width:480px){.seg{grid-template-columns:1fr}}
+
+/* results */
+.lead{font-size:19px;line-height:1.55;margin:0 0 16px}
+.lead strong{color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--surface-2);border-radius:12px;padding:12px 14px;min-width:0}
+.stat .k{font-size:13.5px;color:var(--muted)}
+.stat .v{font-size:24px;font-weight:700;line-height:1.25}
+.stat .s{font-size:12.5px;color:var(--muted)}
+.split{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:6px 0 8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13.5px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:middle}
+.chartbox{overflow-x:auto;margin-top:6px}
+.chartbox svg{display:block;width:100%;min-width:320px;height:auto}
+.checks{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.chk{border-radius:10px;padding:10px 12px;font-size:14.5px;display:flex;gap:10px;align-items:flex-start}
+.chk .ic{font-weight:700;flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;color:var(--surface)}
+.chk.ok{background:var(--ok-soft)} .chk.ok .ic{background:var(--ok)}
+.chk.warn{background:var(--warn-soft)} .chk.warn .ic{background:var(--warn)}
+.chk.bad{background:var(--bad-soft)} .chk.bad .ic{background:var(--bad)}
+.chk.info{background:var(--surface-2)} .chk.info .ic{background:var(--muted)}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:13px}
+td.n{font-variant-numeric:tabular-nums}
+.sec-title{font-size:17px;margin:20px 0 8px}
+.disclaimer{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.5}
+
+/* FAQ + roadmap */
+.faq{display:flex;flex-direction:column;gap:10px;max-width:760px}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px 16px}
+.faq summary{cursor:pointer;font-weight:600;padding:12px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::after{content:"+";color:var(--accent);font-size:20px;line-height:1}
+.faq details[open] summary::after{content:"−"}
+.faq details p{margin:0 0 14px;color:var(--ink)}
+.road{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.road .card h3{font-size:19px;margin-bottom:6px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);margin-bottom:8px}
+.pill.now{background:var(--accent);color:var(--accent-ink)}
+.intro{max-width:760px;color:var(--muted);margin:0 0 18px}
+@media (prefers-reduced-motion:no-preference){.stat .v,.lead{transition:color .2s}}
+
+/* shared additions */
+.btn.sm{padding:5px 12px;font-size:14px}
+.btn.solid{background:var(--accent);color:var(--accent-ink)}
+.btn.solid:hover{opacity:.9;background:var(--accent)}
+.ex-banner{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--warn-soft);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.checkline{display:flex;gap:8px;align-items:flex-start;font-size:14.5px;margin-top:12px;cursor:pointer}
+.checkline input{accent-color:var(--accent);width:18px;height:18px;margin-top:3px;flex:none}
+.banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;border-radius:var(--r);padding:14px 18px;margin-bottom:18px;border:1px solid var(--line);background:var(--surface)}
+.banner .bt{min-width:0;flex:1 1 280px}
+.banner .bt b{display:block;font-size:16px}
+.banner .bt span{color:var(--muted);font-size:14px}
+.verdict{border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.verdict .vt{font-family:var(--display);font-size:22px;line-height:1.3;margin:0 0 4px}
+.verdict p{margin:0;font-size:15px}
+.verdict.go{background:var(--ok-soft)} .verdict.go .vt{color:var(--ok)}
+.verdict.maybe{background:var(--warn-soft)} .verdict.maybe .vt{color:var(--warn)}
+.verdict.no{background:var(--surface-2)} .verdict.no .vt{color:var(--ink)}
+.status-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-inline-end:8px;vertical-align:middle}
+.rrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 36px;gap:8px;align-items:end;padding:10px;border-radius:10px;background:var(--surface-2)}
+.rrow .tsel{grid-column:1/-2}
+.rrow label{font-size:12.5px;color:var(--muted);display:block;margin-bottom:2px}
+.rrow .input{font-size:15px;padding:7px 8px}
+.rrow .tnum{direction:ltr;text-align:right}
+.rrow .rm{grid-column:-2/-1;grid-row:1}
+@media (max-width:480px){.rrow{grid-template-columns:repeat(2,minmax(0,1fr)) 36px}}
+.offers{display:flex;flex-direction:column;gap:8px}
+.offer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;border-radius:10px;background:var(--surface-2)}
+.offer label{font-weight:600;font-size:15px}
+.offer .input{width:110px;font-size:15px;padding:7px 8px;direction:ltr;text-align:right}
+.ctable th,.ctable td{padding:6px 4px;vertical-align:middle}
+.ctable th:first-child,.ctable td:first-child{min-width:120px;white-space:normal}
+.ctable input{width:88px;font-size:15px;padding:6px 8px;direction:ltr;text-align:right}
+.ctable input.bname{direction:rtl;font-weight:600}
+.ctable input.best{border-color:var(--ok);background:var(--ok-soft)}
+.ctable td.avg{color:var(--muted);font-variant-numeric:tabular-nums}
+.ctable .rmb{display:block;margin:2px auto 0;font-size:12px;color:var(--muted);background:none;border:0;cursor:pointer}
+.ctable .rmb:hover{color:var(--bad)}
+.mixsum{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border-radius:999px;padding:4px 12px;font-size:14px}
+.chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.rank{display:flex;flex-direction:column;gap:8px}
+.rk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 14px;border-radius:10px;background:var(--surface-2)}
+.rk.top{background:var(--ok-soft)}
+.rk b{font-size:16px}
+.rk .tot{font-weight:700;font-variant-numeric:tabular-nums}
+.rk small{color:var(--muted);font-size:13px}
+.badge{font-size:12px;font-weight:600;background:var(--ok);color:var(--surface);border-radius:999px;padding:1px 8px;margin-inline-start:6px}
+.mailopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:480px){.mailopts{grid-template-columns:1fr}}
+.mailopts .field{margin-bottom:0}
+.mailtext{font-size:15px;line-height:1.6;margin-top:12px;resize:vertical;min-height:280px}
+@media (max-width:520px){.tabs{border-radius:14px;width:100%}.tab{padding:6px 10px;font-size:14px;flex:1 1 auto}}
+
+.strip{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:13.5px;color:var(--muted);background:var(--surface-2);border-radius:10px;padding:8px 14px;margin-bottom:16px}
+.strip b{color:var(--ink)}
+.offerlist{display:flex;flex-direction:column;gap:14px}
+.offerbox{border:1.5px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.obhead{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.obhead .bname{font-weight:700;font-size:17px;max-width:260px}
+.offerbox .tfoot{margin-top:2px}
+.btn.ghost{border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--bad);background:var(--bad-soft)}
+.mtable td.lbl{white-space:normal;color:var(--muted);min-width:130px}
+.mtable td.best{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.mtable th{color:var(--ink);font-weight:700;font-size:14.5px}
+.offerbox .trow{grid-template-columns:minmax(0,2fr) minmax(0,1.5fr) minmax(0,.9fr) minmax(0,.8fr) 36px}
+@media (max-width:560px){.offerbox .trow{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) 36px}}
+table.wrap td{white-space:normal}
+.pmwrap{min-width:0}
+.pm{display:flex;gap:4px}
+.pm .pmsign{width:46px;flex:none;padding-inline:4px;text-align:center}
+.pm .pmval{flex:1;min-width:0}
+.obtitle{font-size:19px}
+.feeest{font-size:12px;color:var(--muted);margin-top:2px}
+.rrow{position:relative;grid-template-columns:repeat(3,minmax(0,1fr))}
+.rrow .tsel{grid-column:1/-1;padding-left:42px}
+.rrow .rm{position:absolute;left:10px;top:30px}
+@media (max-width:480px){.rrow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+table.wrap th{white-space:normal}
+</style>
+</head>
+<body>
+<!-- נתוני שוק: מתעדכנים אוטומטית פעם בחודש. מקורות: בנק ישראל, הלמ"ס -->
+<script id="market-data" type="application/json">
+{
+  "updated": "2026-10-04",
+  "label": "אוקטובר 2026",
+  "boiRate": 3.25,
+  "prime": 4.75,
+  "nextDecision": "2026-10-21",
+  "cpi": { "month": "אוגוסט 2026", "monthly": 0.7, "annual": 1.5, "nextRelease": "2026-10-15" },
+  "inflationExpect": 2.0,
+  "avg": { "kf": 4.6, "kz": 3.45, "prime": 4.25, "v1l": 4.5, "v1z": 3.4, "v2l": 4.5, "v2z": 3.4, "mlz": 4.4, "mz": 3.3 }
+}
+</script>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">₪</div>
+      <div>
+        <h1>משכנתא לעם</h1>
+        <p>להבין את המשכנתא שלכם, בלי להיות כלכלנים</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="חלקי האתר">
+      <button class="tab" role="tab" id="tab-sim" aria-selected="true" data-view="sim">סימולטור</button>
+      <button class="tab" role="tab" id="tab-refi" aria-selected="false" data-view="refi">בדיקת מחזור</button>
+      <button class="tab" role="tab" id="tab-compare" aria-selected="false" data-view="compare">השוואת הצעות</button>
+      <button class="tab" role="tab" id="tab-faq" aria-selected="false" data-view="faq">שאלות ותשובות</button>
+    </nav>
+  </header>
+
+  <div id="marketStrip" class="strip"></div>
+  <div id="myBanner" class="banner" hidden></div>
+
+  <!-- ================= SIMULATOR ================= -->
+  <section id="view-sim" class="grid">
+    <div class="col">
+      <div class="card">
+        <div class="step"><b>1</b><h2>ההלוואה</h2></div>
+        <div class="field">
+          <label for="amount">כמה כסף אתם לוקחים מהבנק?</label>
+          <div class="money"><span>₪</span><input class="input" id="amount" inputmode="numeric" autocomplete="off" value="1,000,000"></div>
+        </div>
+        <div class="field">
+          <label for="years">לכמה שנים?</label>
+          <div class="range-row">
+            <input type="range" id="years" min="5" max="30" step="1" value="25">
+            <span class="range-val"><span id="yearsVal">25</span> שנים</span>
+          </div>
+          <p class="hint">יותר שנים = החזר חודשי נמוך יותר, אבל בסוף משלמים יותר ריבית.</p>
+        </div>
+        <div class="field">
+          <label for="income">כמה נכנס לכם נטו בחודש? <span style="font-weight:400;color:var(--muted)">(לא חובה)</span></label>
+          <div class="money"><span>₪</span><input class="input" id="income" inputmode="numeric" autocomplete="off" placeholder="למשל 18,000"></div>
+          <p class="hint">ככה נוכל להגיד לכם אם ההחזר החודשי סביר ביחס להכנסה.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="step"><b>2</b><h2>איך לחלק את ההלוואה</h2></div>
+        <p class="hint" style="margin:-6px 0 14px">משכנתא בנויה מכמה "מסלולים", כל אחד עם ריבית אחרת. אפשר להתחיל מאחד התמהילים שכל בנק חייב להציע, או לבנות לבד.</p>
+        <div class="baskets" id="baskets"></div>
+        <div class="tracks" id="tracks"></div>
+        <div class="tfoot">
+          <button class="btn" id="addTrack" type="button">+ הוספת מסלול</button>
+          <span class="sum" id="sumNote"></span>
+        </div>
+        <p class="note" id="mkNote"></p>
+      </div>
+
+      <div class="card">
+        <div class="step"><b>3</b><h2>מה יקרה בעתיד?</h2></div>
+        <p class="hint" style="margin:-6px 0 14px">אף אחד לא יודע מה יהיו המדד והריבית. לכן אנחנו בודקים שלושה מצבים. בחרו לפי איזה מהם להציג את המספרים הגדולים:</p>
+        <div class="seg" id="seg"></div>
+      </div>
+    </div>
+
+    <div class="col results">
+      <div class="card" aria-live="polite">
+        <p class="lead" id="lead"></p>
+        <div class="stats">
+          <div class="stat"><div class="k">ההחזר החודשי בהתחלה</div><div class="v num" id="stFirst"></div></div>
+          <div class="stat"><div class="k">ההחזר הכי גבוה</div><div class="v num" id="stMax"></div><div class="s" id="stMaxWhen"></div></div>
+          <div class="stat"><div class="k">סך הכל תחזירו לבנק</div><div class="v num" id="stTotal"></div></div>
+          <div class="stat"><div class="k">על כל ₪1 שלקחתם</div><div class="v num" id="stPer"></div><div class="s">תחזירו בסוף</div></div>
+        </div>
+
+        <div class="k" style="font-size:14px;font-weight:600">לאן הולך הכסף שתחזירו?</div>
+        <div class="split" id="split"></div>
+        <div class="legend" id="splitLegend"></div>
+
+        <h3 class="sec-title">ההחזר החודשי לאורך השנים</h3>
+        <div class="legend">
+          <span><i style="background:var(--s-good)"></i>תרחיש טוב</span>
+          <span><i style="background:var(--s-base)"></i>תרחיש סביר</span>
+          <span><i style="background:var(--s-hard)"></i>תרחיש קשה</span>
+        </div>
+        <div class="chartbox" id="chart"></div>
+
+        <h3 class="sec-title">מה כדאי לשים לב</h3>
+        <ul class="checks" id="checks"></ul>
+
+        <h3 class="sec-title">שלושת התרחישים זה לצד זה</h3>
+        <div class="tbl-wrap"><table id="scenTable"></table></div>
+
+        <h3 class="sec-title">פירוט לפי מסלול <span style="font-family:var(--body);font-size:13px;color:var(--muted)">(בתרחיש שבחרתם)</span></h3>
+        <div class="tbl-wrap"><table id="trackTable"></table></div>
+
+        <h3 class="sec-title">מול שלושת הסלים האחידים</h3>
+        <p class="hint" style="margin:0 0 8px">כך נראים הסלים שכל בנק חייב להציע, לפי ממוצעי השוק, באותו סכום ובאותה תקופה. "המחיר האמיתי" הוא הריבית השנתית בפועל, כולל הצמדה צפויה.</p>
+        <div class="tbl-wrap"><table class="wrap" id="basketCmp"></table></div>
+
+        <h3 class="sec-title">מה אם נקצר או נאריך?</h3>
+        <div id="simTerm"></div>
+
+        <p class="disclaimer">הכלי מציג הערכה בלבד ואינו ייעוץ פיננסי או המלצה. החישוב לפי שיטת שפיצר (החזר חודשי שווה), ריבית חודשית לפי ריבית שנתית חלקי 12, והצמדה חודשית למדד. ההצעה האמיתית מהבנק תלויה בהכנסה, באחוז המימון ובנתונים שלכם. הנתונים שתזינו נשמרים רק בדפדפן שלכם ולא נשלחים לשום מקום.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REFINANCE ================= -->
+  <section id="view-refi" class="grid" hidden>
+    <div class="col">
+      <div class="card">
+        <div class="step"><b>1</b><h2>המשכנתא שלכם היום</h2></div>
+        <p class="hint" style="margin:-6px 0 12px">את הנתונים תמצאו ב<strong>דוח יתרות לסילוק</strong>. הבנק חייב לתת אותו בחינם, ובדרך כלל אפשר להוריד אותו מהאפליקציה או מהאתר של הבנק.</p>
+        <div id="refiExample" class="ex-banner" hidden>
+          <span>אלה נתונים לדוגמה. החליפו אותם בנתונים של המשכנתא שלכם.</span>
+          <button type="button" class="btn sm" id="refiClear">ניקוי והזנת הנתונים שלי</button>
+        </div>
+        <div id="refiTracks" class="tracks"></div>
+        <div class="tfoot"><button class="btn" id="refiAdd" type="button">+ הוספת מסלול</button></div>
+      </div>
+
+      <div class="card">
+        <div class="step"><b>2</b><h2>איך אנחנו בודקים</h2></div>
+        <p class="hint" style="margin:-6px 0 12px">אנחנו משווים את הריבית בכל מסלול שלכם לריבית הממוצעת שהבנקים נותנים היום (לפי בנק ישראל, מעודכן ל<span id="refiMk"></span>). אם הריבית שלכם גבוהה מהממוצע, אנחנו מחשבים כמה תחסכו אם תקבלו את הריבית הממוצעת, אחרי עמלת הפירעון המוקדם.</p>
+        <div class="tbl-wrap"><table class="wrap" id="refiCmp"></table></div>
+        <label class="checkline"><input type="checkbox" id="refiRemember"> לזכור את המשכנתא שלי במכשיר הזה ולבדוק אותה שוב בכל ביקור</label>
+      </div>
+    </div>
+
+    <div class="col results">
+      <div class="card" aria-live="polite">
+        <div id="refiVerdict" class="verdict"></div>
+        <div class="stats">
+          <div class="stat"><div class="k">חיסכון משוער לאורך התקופה</div><div class="v num" id="rfSave"></div><div class="s">אחרי עמלות הפירעון</div></div>
+          <div class="stat"><div class="k">שינוי בהחזר החודשי</div><div class="v num" id="rfMonthly"></div><div class="s" id="rfMonthlyS"></div></div>
+          <div class="stat"><div class="k">עמלות פירעון מוקדם (הערכה)</div><div class="v num" id="rfFees"></div></div>
+          <div class="stat"><div class="k">מסלולים מעל ממוצע השוק</div><div class="v num" id="rfCount"></div></div>
+        </div>
+        <h3 class="sec-title">פירוט לפי מסלול</h3>
+        <div class="tbl-wrap"><table class="wrap" id="refiTable"></table></div>
+        <h3 class="sec-title">טיפים שחוסכים כסף במחזור</h3>
+        <ul class="checks" id="refiTips"></ul>
+        <p class="disclaimer">החישוב הוא הערכה בלבד ואינו ייעוץ פיננסי. אם לא הזנתם עמלת פירעון, היא מוערכת לפי הכללים של בנק ישראל (כולל הנחה של 20% אחרי 3 שנים ו-30% אחרי 5 שנים). הסכום המדויק מופיע בדוח הסילוקין הרשמי של הבנק. ההנחה היא שתקבלו את הריבית הממוצעת בשוק; בפועל ההצעה תלויה בבנק ובנתונים שלכם. שני הצדדים מחושבים לפי התרחיש הסביר.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMPARE OFFERS ================= -->
+  <section id="view-compare" class="grid" hidden>
+    <div class="col">
+      <div class="card">
+        <div class="step"><b>1</b><h2>ההצעות שקיבלתם</h2></div>
+        <p class="hint" style="margin:-6px 0 12px">הזינו כל הצעה כמו שהיא מופיעה באישור העקרוני: לכל מסלול את הסכום, הריבית ומספר השנים. לכל בנק יכול להיות תמהיל אחר ותקופות אחרות. במסלול פריים, בחרו פלוס או מינוס והקלידו את המרווח (למשל פריים מינוס 0.5%).</p>
+        <div id="cmpExample" class="ex-banner" hidden>
+          <span>אלה הצעות לדוגמה. החליפו אותן בהצעות שקיבלתם.</span>
+          <button type="button" class="btn sm" id="cmpClear">ניקוי והזנת ההצעות שלי</button>
+        </div>
+        <div id="offerList" class="offerlist"></div>
+        <div class="tfoot"><button class="btn" id="cmpAdd" type="button">+ הוספת הצעה</button></div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label for="cmpIncome">כמה נכנס לכם נטו בחודש? <span style="font-weight:400;color:var(--muted)">(לא חובה)</span></label>
+          <div class="money"><span>₪</span><input class="input" id="cmpIncome" inputmode="numeric" autocomplete="off" placeholder="למשל 18,000"></div>
+          <p class="hint">עוזר לנו להגיד אם קיצור התקופה יכביד עליכם.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col results">
+      <div class="card" aria-live="polite">
+        <div id="cmpVerdict" class="verdict"></div>
+        <ul class="checks" id="cmpWarn" style="margin-bottom:12px"></ul>
+        <div class="tbl-wrap"><table class="mtable" id="cmpTable"></table></div>
+        <p class="note"><b>מה זה "המחיר האמיתי"?</b> הריבית השנתית שאתם משלמים בפועל על כל ההלוואה, כולל ההצמדה למדד הצפויה. זו הדרך ההוגנת להשוות הצעות עם תמהילים ותקופות שונים: ככל שהמספר נמוך יותר, ההצעה זולה יותר. כל החישובים לפי התרחיש הסביר.</p>
+        <p class="disclaimer">ההשוואה היא הערכה בלבד ואינה ייעוץ פיננסי. ההצעות שתזינו נשמרות רק בדפדפן שלכם.</p>
+      </div>
+      <div class="card">
+        <div class="step"><b>2</b><h2>מה אם נקצר או נאריך?</h2></div>
+        <div class="field" style="max-width:280px"><label for="termOffer">בדיקה עבור ההצעה של</label><select class="input" id="termOffer"></select></div>
+        <div id="cmpTerm"></div>
+      </div>
+      <div class="card">
+        <div class="step"><b>3</b><h2>מייל לבנק</h2></div>
+        <p class="hint" style="margin:-6px 0 12px">מייל מוכן שמבקש מהבנק להשוות כל מסלול להצעה הטובה ביותר שקיבלתם, באותו מסלול ובתקופה דומה. המייל לא מזכיר שמות של בנקים אחרים. אפשר לערוך אותו לפני ששולחים.</p>
+        <div class="mailopts">
+          <div class="field"><label for="mailBank">למי שולחים?</label><select class="input" id="mailBank"></select></div>
+          <div class="field"><label for="mailName">השם שלכם</label><input class="input" id="mailName" autocomplete="name" placeholder="ישראל ישראלי"></div>
+        </div>
+        <textarea class="input mailtext" id="mailText" rows="16" aria-label="נוסח המייל"></textarea>
+        <div class="tfoot">
+          <button type="button" class="btn solid" id="mailCopy">העתקת המייל</button>
+          <span class="sum" id="mailCopied" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section id="view-faq" hidden>
+    <p class="intro">התחלה של מאגר שאלות נפוצות, בשפה פשוטה. נמשיך להרחיב אותו.</p>
+    <div class="faq" id="faqList"></div>
+  </section>
+
+</div>
+<script>
+// ===== מנוע החישוב של "משכנתא לעם" =====
+// כל הסכומים בשקלים נומינליים. ריבית חודשית = ריבית שנתית / 12 (כמקובל בבנקים בישראל).
+var ENGINE = (function () {
+  var MARKET = {
+    updated: '2026-10-04', label: 'אוקטובר 2026', boiRate: 3.25, prime: 4.75, nextDecision: '2026-10-21',
+    cpi: { month: 'אוגוסט 2026', monthly: 0.7, annual: 1.5, nextRelease: '2026-10-15' }, inflationExpect: 2.0,
+    avg: { kf: 4.6, kz: 3.45, prime: 4.25, v1l: 4.5, v1z: 3.4, v2l: 4.5, v2z: 3.4, mlz: 4.4, mz: 3.3 }
+  };
+  try {
+    if (typeof document !== 'undefined') {
+      var el = document.getElementById('market-data');
+      if (el) { var m = JSON.parse(el.textContent); for (var k in m) MARKET[k] = m[k]; }
+    }
+  } catch (e) {}
+
+  // kind: fixed = קבועה, prime = פריים, var = משתנה כל period חודשים
+  var TRACKS = {
+    kf:   { name: 'קבועה לא צמודה', indexed: false, kind: 'fixed', color: 'var(--accent)' },
+    kz:   { name: 'קבועה צמודה למדד', indexed: true, kind: 'fixed', color: 'var(--s-good)' },
+    prime:{ name: 'פריים', indexed: false, kind: 'prime', color: 'var(--s-hard)' },
+    v1l:  { name: 'משתנה כל שנה, לא צמודה', indexed: false, kind: 'var', period: 12, color: 'var(--c-v1l)' },
+    v1z:  { name: 'משתנה כל שנה, צמודה', indexed: true, kind: 'var', period: 12, color: 'var(--c-v1z)' },
+    v2l:  { name: 'משתנה כל שנתיים, לא צמודה', indexed: false, kind: 'var', period: 24, color: 'var(--c-v2l)' },
+    v2z:  { name: 'משתנה כל שנתיים, צמודה', indexed: true, kind: 'var', period: 24, color: 'var(--c-v2z)' },
+    mlz:  { name: 'משתנה כל 5 שנים, לא צמודה', indexed: false, kind: 'var', period: 60, color: 'var(--muted)' },
+    mz:   { name: 'משתנה כל 5 שנים, צמודה', indexed: true, kind: 'var', period: 60, color: 'var(--warn)' }
+  };
+  Object.keys(TRACKS).forEach(function (k) { TRACKS[k].rate = MARKET.avg[k] != null ? MARKET.avg[k] : 4; });
+
+  var inf = MARKET.inflationExpect;
+  var SCENARIOS = {
+    good: { name: 'תרחיש טוב', inflation: Math.max(0.5, inf - 1), primeShift: -0.75, varShift: -0.5,
+            text: 'אינפלציה נמוכה (' + Math.max(0.5, inf - 1) + '% בשנה) וריבית בנק ישראל יורדת קצת' },
+    base: { name: 'תרחיש סביר', inflation: inf, primeShift: 0, varShift: 0,
+            text: 'אינפלציה של ' + inf + '% בשנה (הצפי בשוק) והריבית נשארת כמו היום' },
+    hard: { name: 'תרחיש קשה', inflation: inf + 1.5, primeShift: 2, varShift: 1.5,
+            text: 'אינפלציה גבוהה (' + (inf + 1.5) + '% בשנה) והריבית עולה ב-2%' }
+  };
+
+  function pmt(r, n, pv) {
+    if (n <= 0) return pv;
+    if (Math.abs(r) < 1e-12) return pv / n;
+    return pv * r / (1 - Math.pow(1 + r, -n));
+  }
+  // שינוי הריבית בתרחיש מגיע בהדרגה במשך שנתיים ואז נשאר
+  function ramp(month) { return Math.min(1, month / 24); }
+
+  // סימולציה של מסלול אחד. resetMonth = בעוד כמה חודשים הריבית מתעדכנת לראשונה (במסלול משתנה)
+  function simTrack(t, scen) {
+    var def = TRACKS[t.type];
+    var n = Math.round(t.years * 12);
+    var bal = t.amount;
+    var infM = Math.pow(1 + scen.inflation / 100, 1 / 12) - 1;
+    var payments = new Array(n);
+    var totalPaid = 0, totalInterest = 0, totalIndex = 0;
+    var first = def.kind === 'var' ? (t.resetMonth != null ? t.resetMonth : def.period) : 0;
+    for (var m = 1; m <= n; m++) {
+      if (def.indexed) { var inc = bal * infM; bal += inc; totalIndex += inc; }
+      var annual = t.rate;
+      if (def.kind === 'prime') annual = t.rate + scen.primeShift * ramp(m);
+      if (def.kind === 'var' && m > first) {
+        var last = first + Math.floor((m - 1 - first) / def.period) * def.period;
+        annual = t.rate + scen.varShift * ramp(last);
+      }
+      if (annual < 0.1) annual = 0.1;
+      var r = annual / 1200;
+      var pay = pmt(r, n - m + 1, bal);
+      var interest = bal * r;
+      bal = bal - (pay - interest);
+      if (m === n) bal = 0;
+      payments[m - 1] = pay;
+      totalPaid += pay; totalInterest += interest;
+    }
+    return { payments: payments, totalPaid: totalPaid, totalInterest: totalInterest, totalIndex: totalIndex };
+  }
+
+  // ריבית אפקטיבית שנתית של זרם תשלומים (כולל הצמדה צפויה) - "המחיר האמיתי" של ההלוואה
+  function irr(amount, monthly) {
+    var lo = 0, hi = 0.03;
+    for (var it = 0; it < 60; it++) {
+      var mid = (lo + hi) / 2, pv = 0, d = 1;
+      for (var i = 0; i < monthly.length; i++) { d /= (1 + mid); pv += monthly[i] * d; }
+      if (pv > amount) lo = mid; else hi = mid;
+    }
+    return ((lo + hi) / 2) * 1200;
+  }
+
+  function simulate(tracks, scen, withRate) {
+    var maxN = 0;
+    var per = tracks.map(function (t) {
+      var r = simTrack(t, scen);
+      if (r.payments.length > maxN) maxN = r.payments.length;
+      return r;
+    });
+    var monthly = new Array(maxN).fill(0);
+    per.forEach(function (r) { r.payments.forEach(function (p, i) { monthly[i] += p; }); });
+    var total = 0, interest = 0, index = 0, borrowed = 0;
+    per.forEach(function (r, i) { total += r.totalPaid; interest += r.totalInterest; index += r.totalIndex; borrowed += tracks[i].amount; });
+    var maxPay = 0, maxMonth = 0;
+    monthly.forEach(function (p, i) { if (p > maxPay + 0.5) { maxPay = p; maxMonth = i + 1; } });
+    return {
+      monthly: monthly, perTrack: per, first: monthly[0] || 0, maxPay: maxPay, maxMonth: maxMonth,
+      total: total, interest: interest, index: index, borrowed: borrowed, months: maxN,
+      perShekel: borrowed ? total / borrowed : 0,
+      rate: withRate && borrowed && maxN ? irr(borrowed, monthly) : null
+    };
+  }
+
+  // ===== עמלת פירעון מוקדם (הערכה), לפי צו הבנקאות (עמלות פירעון מוקדם) =====
+  var OP_FEE = 60;
+  function prepayFee(t, avgRate, origAvg) {
+    var def = TRACKS[t.type];
+    if (def.kind === 'prime') return 0;               // ריבית שמשתנה כל חודש: אין עמלת היוון
+    var n = Math.round(t.years * 12);
+    var h = def.kind === 'var' ? Math.min(n, Math.max(0, Math.round(t.resetMonth || 0))) : n;
+    if (h <= 0 || t.amount <= 0) return 0;            // בנקודת שינוי הריבית: אין עמלת היוון
+    var diff = t.rate - avgRate;
+    if (origAvg != null && !isNaN(origAvg)) diff = Math.min(diff, origAvg - avgRate);
+    if (diff <= 0) return 0;
+    var rc = t.rate / 1200, ra = (t.rate - diff) / 1200;
+    var pay = pmt(rc, n, t.amount), bal = t.amount, pv = 0;
+    for (var k = 1; k <= h; k++) { bal = bal * (1 + rc) - pay; pv += pay / Math.pow(1 + ra, k); }
+    if (h < n) pv += Math.max(0, bal) / Math.pow(1 + ra, h);
+    var fee = Math.max(0, pv - t.amount);
+    var age = t.age || 0;
+    if (age >= 5) fee *= 0.7; else if (age >= 3) fee *= 0.8;
+    return fee;
+  }
+
+  // ===== מה קורה אם מקצרים או מאריכים את התקופה =====
+  function withYears(tracks, d, onlyIndex) {
+    return tracks.map(function (t, i) {
+      if (onlyIndex != null && i !== onlyIndex) return t;
+      return Object.assign({}, t, { years: Math.max(4, Math.min(30, t.years + d)) });
+    });
+  }
+
+  return { MARKET: MARKET, MARKET_DATE: MARKET.label, PRIME_NOW: MARKET.prime, OP_FEE: OP_FEE, TRACKS: TRACKS, SCENARIOS: SCENARIOS,
+    pmt: pmt, simTrack: simTrack, simulate: simulate, irr: irr, prepayFee: prepayFee, withYears: withYears };
+})();
+if (typeof module !== 'undefined') module.exports = ENGINE;
+// ===== שדה ריבית: במסלול פריים בוחרים פלוס/מינוס וכותבים את המרווח =====
+var RATEUI = (function () {
+  var P = ENGINE.PRIME_NOW;
+  function r2(x) { return Math.round(x * 100) / 100; }
+  function num(s) { var n = parseFloat(String(s).replace(',', '.')); return isNaN(n) ? 0 : n; }
+  function html(id, t, label) {
+    if (ENGINE.TRACKS[t.type].kind === 'prime') {
+      var m = r2((t.rate || P) - P), neg = m < 0;
+      return '<div class="pmwrap"><label for="' + id + '">פריים פלוס/מינוס (%)</label><div class="pm">' +
+        '<select class="input pmsign" aria-label="פלוס או מינוס"><option value="-1"' + (neg ? ' selected' : '') + '>−</option><option value="1"' + (!neg ? ' selected' : '') + '>+</option></select>' +
+        '<input class="input tnum pmval" id="' + id + '" inputmode="decimal" value="' + Math.abs(m) + '"></div></div>';
+    }
+    return '<div><label for="' + id + '">' + (label || 'ריבית (%)') + '</label><input class="input tnum rval" id="' + id + '" inputmode="decimal" value="' + (t.rate || '') + '"></div>';
+  }
+  function bind(row, t, cb) {
+    var s = row.querySelector('.pmsign'), v = row.querySelector('.pmval'), r = row.querySelector('.rval');
+    if (s && v) {
+      var upd = function () { t.rate = r2(P + (+s.value) * num(v.value)); cb(); };
+      s.addEventListener('change', upd); v.addEventListener('input', upd);
+    } else if (r) r.addEventListener('input', function () { t.rate = num(r.value); cb(); });
+  }
+  function label(type, rate) {
+    if (ENGINE.TRACKS[type].kind !== 'prime') return rate + '%';
+    var d = r2(rate - P);
+    return (d === 0 ? 'פריים' : 'פריים ' + (d < 0 ? 'מינוס ' : 'פלוס ') + Math.abs(d) + '%') + ' (' + rate + '%)';
+  }
+  return { html: html, bind: bind, label: label };
+})();
+// ===== "מה אם נקצר או נאריך?" - משותף לסימולטור ולהשוואת ההצעות =====
+var TERM = (function () {
+  var E = ENGINE, T = E.TRACKS, BASE = E.SCENARIOS.base;
+  function fmt(x) { return '₪' + Math.round(x).toLocaleString('he-IL'); }
+  function signed(x) { return (x >= 0 ? '+' : '−') + fmt(Math.abs(x)); }
+
+  function html(tracks, income) {
+    if (!tracks.length) return '';
+    var base = E.simulate(tracks, BASE);
+    var rows = [{ label: 'כמו עכשיו', r: base, d: 0 }];
+    [-5, -10, 5].forEach(function (d) {
+      var tt = E.withYears(tracks, d);
+      if (tt.every(function (t, i) { return t.years === tracks[i].years; })) return;
+      rows.push({ label: d < 0 ? 'קיצור ב-' + (-d) + ' שנים' : 'הארכה ב-' + d + ' שנים', r: E.simulate(tt, BASE), d: d });
+    });
+    var table = '<div class="tbl-wrap"><table class="wrap"><thead><tr><th>תקופה</th><th>החזר בהתחלה</th><th>שינוי בחודש</th><th>סך הכל</th><th>לעומת עכשיו</th></tr></thead><tbody>' +
+      rows.map(function (x) {
+        var dm = x.r.first - base.first, dt = x.r.total - base.total;
+        return '<tr' + (x.d === 0 ? ' style="font-weight:700"' : '') + '><td>' + x.label + '</td><td class="n">' + fmt(x.r.first) + '</td><td class="n">' + (x.d ? signed(dm) : '—') + '</td><td class="n">' + fmt(x.r.total) + '</td>' +
+          '<td class="n" style="color:' + (dt < 0 ? 'var(--ok)' : dt > 0 ? 'var(--bad)' : 'inherit') + '">' + (x.d ? (dt < 0 ? 'חוסכים ' + fmt(-dt) : 'משלמים עוד ' + fmt(dt)) : '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+
+    var tips = [];
+    // המסלול היקר ביותר (כולל הצמדה צפויה) שאינו פריים
+    var idx = -1, best = -1;
+    tracks.forEach(function (t, i) {
+      if (T[t.type].kind === 'prime' || t.years - 5 < 4) return;
+      var eff = t.rate + (T[t.type].indexed ? BASE.inflation : 0);
+      if (eff > best) { best = eff; idx = i; }
+    });
+    if (idx >= 0 && tracks.length > 1) {
+      var one = E.simulate(E.withYears(tracks, -5, idx), BASE);
+      tips.push(['ok', '✓', 'אם רוצים לקצר, הכי משתלם לקצר את המסלול היקר ביותר: <b>' + T[tracks[idx].type].name + '</b>' + (T[tracks[idx].type].indexed ? ' (כולל ההצמדה למדד)' : '') + '. קיצור שלו בלבד ב-5 שנים יעלה את ההחזר ב-' + fmt(one.first - base.first) + ' בחודש, ויחסוך ' + fmt(base.total - one.total) + '.']);
+    }
+    var short5 = rows.filter(function (x) { return x.d === -5; })[0];
+    if (income > 0 && short5) {
+      var ratio = short5.r.first / income;
+      tips.push([ratio <= 0.34 ? 'ok' : 'warn', ratio <= 0.34 ? '✓' : '~', 'אחרי קיצור ב-5 שנים ההחזר יהיה ' + Math.round(ratio * 100) + '% מההכנסה שלכם' + (ratio <= 0.34 ? ', עדיין בטווח הנוח.' : '. זה מעל שליש מההכנסה, אז כדאי לחשוב טוב אם זה לא יכביד.')]);
+    }
+    tips.push(['info', 'i', '<b>קיצור התקופה</b> מעלה את ההחזר החודשי, אבל חוסך הרבה ריבית. בנוסף, בנקים נותנים בדרך כלל ריבית נמוכה יותר לתקופות קצרות, אז החיסכון בפועל יכול להיות גדול יותר ממה שמוצג כאן.']);
+    tips.push(['info', 'i', '<b>הארכת התקופה</b> מורידה את ההחזר החודשי ומקלה על התקציב, אבל בסוף משלמים יותר. זה יכול להתאים כשההחזר מכביד, או כשרוצים להשאיר כרית ביטחון.']);
+    if (tracks.some(function (t) { return T[t.type].kind === 'prime'; })) tips.push(['info', 'i', 'את <b>מסלול הפריים</b> אפשר לפרוע בכל רגע בלי עמלת היוון. לכן אפשר להשאיר אותו לתקופה ארוכה (החזר נמוך), ולפרוע אותו מוקדם כשיש כסף פנוי.']);
+    return table + '<ul class="checks" style="margin-top:12px">' + tips.map(function (c) { return '<li class="chk ' + c[0] + '"><span class="ic" aria-hidden="true">' + c[1] + '</span><span>' + c[2] + '</span></li>'; }).join('') + '</ul>';
+  }
+  return { html: html };
+})();
+(function () {
+  var E = ENGINE, T = E.TRACKS, S = E.SCENARIOS;
+  var TRACK_COLOR = {}; Object.keys(T).forEach(function (k) { TRACK_COLOR[k] = T[k].color; });
+  var BASKETS = {
+    b1: { name: 'הכל בריבית קבועה', text: 'ההחזר לא משתנה אף פעם. הריבית בהתחלה גבוהה יותר.', mix: [['kf', 100]] },
+    b2: { name: 'שליש, שליש, שליש', text: 'קבועה, משתנה צמודה ופריים. איזון בין יציבות למחיר.', mix: [['kf', 34], ['mz', 33], ['prime', 33]] },
+    b3: { name: 'חצי קבועה, חצי פריים', text: 'ריבית התחלתית נמוכה יותר, אבל חצי מההחזר זז עם ריבית בנק ישראל.', mix: [['kf', 50], ['prime', 50]] },
+    custom: { name: 'תמהיל משלי', text: 'בונים לבד, או מעתיקים את ההצעה שקיבלתם מהבנק.', mix: null }
+  };
+  var KEY = 'mashkanta-pshuta-v1';
+
+  function mixFrom(b, years) {
+    return BASKETS[b].mix.map(function (m) { return { type: m[0], pct: m[1], rate: T[m[0]].rate, years: years }; });
+  }
+  var state = { amount: 1000000, years: 25, income: 0, basket: 'b2', scen: 'base', tracks: mixFrom('b2', 25) };
+  try { var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && saved.tracks && saved.tracks.length) state = saved; } catch (e) {}
+  // תמהיל אחיד שלא נערך: מרעננים את הריביות לפי נתוני השוק העדכניים
+  if (BASKETS[state.basket] && BASKETS[state.basket].mix) state.tracks = mixFrom(state.basket, state.years);
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(x) { return '₪' + Math.round(x).toLocaleString('he-IL'); }
+  function digits(s) { var n = parseInt(String(s).replace(/[^\d]/g, ''), 10); return isNaN(n) ? 0 : n; }
+  function num(s) { var n = parseFloat(String(s).replace(',', '.')); return isNaN(n) ? 0 : n; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  /* ---------- tabs ---------- */
+  document.querySelectorAll('.tab').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+      document.querySelectorAll('[id^="view-"]').forEach(function (v) { v.hidden = v.id !== 'view-' + b.dataset.view; });
+      try { history.replaceState(null, '', '#' + b.dataset.view); } catch (e) {}
+      window.scrollTo(0, 0);
+    });
+  });
+
+  /* ---------- step 1 ---------- */
+  $('amount').value = state.amount.toLocaleString('he-IL');
+  $('years').value = state.years; $('yearsVal').textContent = state.years;
+  if (state.income) $('income').value = state.income.toLocaleString('he-IL');
+  $('amount').addEventListener('input', function () { state.amount = digits(this.value); calc(); });
+  $('amount').addEventListener('blur', function () { this.value = state.amount ? state.amount.toLocaleString('he-IL') : ''; });
+  $('income').addEventListener('input', function () { state.income = digits(this.value); calc(); });
+  $('income').addEventListener('blur', function () { this.value = state.income ? state.income.toLocaleString('he-IL') : ''; });
+  $('years').addEventListener('input', function () {
+    state.years = +this.value; $('yearsVal').textContent = state.years;
+    state.tracks.forEach(function (t) { t.years = state.years; });
+    document.querySelectorAll('.tyears').forEach(function (i) { i.value = state.years; });
+    calc();
+  });
+
+  /* ---------- step 2: baskets ---------- */
+  function renderBaskets() {
+    $('baskets').innerHTML = Object.keys(BASKETS).map(function (k) {
+      var b = BASKETS[k];
+      var bar = b.mix ? '<span class="mixbar">' + b.mix.map(function (m) { return '<i style="width:' + m[1] + '%;background:' + TRACK_COLOR[m[0]] + '"></i>'; }).join('') + '</span>' : '';
+      return '<button type="button" class="basket" data-b="' + k + '" aria-pressed="' + (state.basket === k) + '"><strong>' + b.name + '</strong><small>' + b.text + '</small>' + bar + '</button>';
+    }).join('');
+    $('baskets').querySelectorAll('.basket').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var k = el.dataset.b; state.basket = k;
+        if (BASKETS[k].mix) state.tracks = mixFrom(k, state.years);
+        renderBaskets(); renderTracks(); calc();
+      });
+    });
+  }
+  function toCustom() {
+    if (state.basket !== 'custom') { state.basket = 'custom'; renderBaskets(); }
+  }
+
+  /* ---------- step 2: tracks ---------- */
+  function renderTracks() {
+    var opts = function (sel) { return Object.keys(T).map(function (k) { return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + T[k].name + '</option>'; }).join(''); };
+    $('tracks').innerHTML = state.tracks.map(function (t, i) {
+      return '<div class="trow" data-i="' + i + '">' +
+        '<div class="tsel"><label for="tt' + i + '">מסלול</label><select class="input ttype" id="tt' + i + '">' + opts(t.type) + '</select></div>' +
+        '<div><label for="tp' + i + '">חלק (%)</label><input class="input tnum tpct" id="tp' + i + '" inputmode="decimal" value="' + t.pct + '"></div>' +
+        RATEUI.html('tr' + i, t) +
+        '<div><label for="ty' + i + '">שנים</label><input class="input tnum tyears" id="ty' + i + '" inputmode="numeric" value="' + t.years + '"></div>' +
+        '<button type="button" class="rm" aria-label="הסרת המסלול" title="הסרה"' + (state.tracks.length < 2 ? ' disabled style="visibility:hidden"' : '') + '>×</button>' +
+        '</div>';
+    }).join('');
+    $('tracks').querySelectorAll('.trow').forEach(function (row) {
+      var i = +row.dataset.i, t = state.tracks[i];
+      row.querySelector('.ttype').addEventListener('change', function () { t.type = this.value; t.rate = T[t.type].rate; toCustom(); renderTracks(); calc(); });
+      row.querySelector('.tpct').addEventListener('input', function () { t.pct = num(this.value); toCustom(); calc(); });
+      RATEUI.bind(row, t, function () { toCustom(); calc(); });
+      row.querySelector('.tyears').addEventListener('input', function () { var y = Math.round(num(this.value)); t.years = Math.max(1, Math.min(30, y || 1)); toCustom(); calc(); });
+      row.querySelector('.rm').addEventListener('click', function () { state.tracks.splice(i, 1); toCustom(); renderTracks(); calc(); });
+    });
+  }
+  $('addTrack').addEventListener('click', function () {
+    var used = state.tracks.reduce(function (s, t) { return s + t.pct; }, 0);
+    state.tracks.push({ type: 'prime', pct: Math.max(0, 100 - used), rate: T.prime.rate, years: state.years });
+    toCustom(); renderTracks(); calc();
+  });
+
+  /* ---------- step 3: scenarios ---------- */
+  var SCOL = { good: 'var(--s-good)', base: 'var(--s-base)', hard: 'var(--s-hard)' };
+  function renderSeg() {
+    $('seg').innerHTML = ['good', 'base', 'hard'].map(function (k) {
+      return '<button type="button" class="sbtn" data-s="' + k + '" aria-pressed="' + (state.scen === k) + '" style="color:' + SCOL[k] + '"><span class="dot" style="background:' + SCOL[k] + '"></span><strong>' + S[k].name + '</strong><small>' + S[k].text + '</small></button>';
+    }).join('');
+    $('seg').querySelectorAll('.sbtn').forEach(function (b) {
+      b.addEventListener('click', function () { state.scen = b.dataset.s; renderSeg(); calc(); });
+    });
+  }
+
+  /* ---------- calculation + results ---------- */
+  window.SIM = { get: function () { return state; } };
+  function calc() {
+    save();
+    var sum = state.tracks.reduce(function (s, t) { return s + (t.pct > 0 ? t.pct : 0); }, 0);
+    var sumEl = $('sumNote');
+    if (Math.abs(sum - 100) > 0.5) { sumEl.className = 'sum bad'; sumEl.textContent = 'סך החלקים: ' + Math.round(sum * 10) / 10 + '%. צריך להגיע ל-100%.'; }
+    else { sumEl.className = 'sum'; sumEl.textContent = 'סך החלקים: 100% ✓'; }
+    if (!state.amount || !sum) { $('lead').textContent = 'הזינו סכום הלוואה ולפחות מסלול אחד כדי לראות תוצאות.'; return; }
+
+    var tracks = state.tracks.filter(function (t) { return t.pct > 0; }).map(function (t) {
+      return { type: t.type, amount: state.amount * t.pct / sum, rate: t.rate, years: t.years };
+    });
+    var res = {}; ['good', 'base', 'hard'].forEach(function (k) { res[k] = E.simulate(tracks, S[k]); });
+    var r = res[state.scen], sc = S[state.scen];
+    var rises = r.maxPay - r.first > 5;
+
+    $('lead').innerHTML = 'ב' + sc.name + ', בחודש הראשון תשלמו <strong class="num">' + fmt(r.first) + '</strong>. ' +
+      (rises ? 'ההחזר צפוי לעלות עד <strong class="num">' + fmt(r.maxPay) + '</strong> בשנה ה-' + Math.ceil(r.maxMonth / 12) + '. '
+             : 'ההחזר יישאר קבוע לאורך כל התקופה. ') +
+      'בסוף תחזירו <span class="num">' + fmt(r.total) + '</span> על הלוואה של <span class="num">' + fmt(r.borrowed) + '</span>.';
+    $('stFirst').textContent = fmt(r.first);
+    $('stMax').textContent = fmt(r.maxPay);
+    $('stMaxWhen').textContent = rises ? 'בשנה ה-' + Math.ceil(r.maxMonth / 12) : 'קבוע לאורך כל התקופה';
+    $('stTotal').textContent = fmt(r.total);
+    $('stPer').textContent = '₪' + r.perShekel.toFixed(2);
+
+    // split bar
+    var parts = [['הקרן (הכסף שלקחתם)', r.borrowed, 'var(--accent)'], ['ריבית', r.interest, 'var(--s-hard)']];
+    if (r.index > 1) parts.push(['הצמדה למדד', r.index, 'var(--s-good)']);
+    $('split').innerHTML = parts.map(function (p) { return '<i style="display:block;width:' + (p[1] / r.total * 100) + '%;background:' + p[2] + '" title="' + p[0] + '"></i>'; }).join('');
+    $('splitLegend').innerHTML = parts.map(function (p) { return '<span><i style="background:' + p[2] + '"></i>' + p[0] + ': <span class="num">' + fmt(p[1]) + '</span></span>'; }).join('');
+
+    drawChart(res);
+    renderChecks(res, sum, tracks);
+    $('simTerm').innerHTML = TERM.html(tracks, state.income);
+    renderBasketCmp(tracks);
+
+    $('scenTable').innerHTML = '<thead><tr><th>תרחיש</th><th>החזר בהתחלה</th><th>החזר מקסימלי</th><th>סך הכל</th></tr></thead><tbody>' +
+      ['good', 'base', 'hard'].map(function (k) {
+        var x = res[k];
+        return '<tr' + (k === state.scen ? ' style="font-weight:700"' : '') + '><td><span class="dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:' + SCOL[k] + ';margin-inline-end:6px"></span>' + S[k].name + '</td><td class="n">' + fmt(x.first) + '</td><td class="n">' + fmt(x.maxPay) + '</td><td class="n">' + fmt(x.total) + '</td></tr>';
+      }).join('') + '</tbody>';
+
+    $('trackTable').innerHTML = '<thead><tr><th>מסלול</th><th>סכום</th><th>ריבית</th><th>החזר בהתחלה</th><th>סך הכל</th></tr></thead><tbody>' +
+      tracks.map(function (t, i) {
+        var p = r.perTrack[i];
+        return '<tr><td>' + T[t.type].name + '</td><td class="n">' + fmt(t.amount) + '</td><td class="n">' + RATEUI.label(t.type, t.rate) + '</td><td class="n">' + fmt(p.payments[0]) + '</td><td class="n">' + fmt(p.totalPaid) + '</td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  function renderBasketCmp(mine) {
+    var rows = ['b1', 'b2', 'b3'].map(function (k) {
+      var tr = BASKETS[k].mix.map(function (m) { return { type: m[0], amount: state.amount * m[1] / 100, rate: T[m[0]].rate, years: state.years }; });
+      return { name: BASKETS[k].name, r: E.simulate(tr, S.base, true), mine: state.basket === k };
+    });
+    if (state.basket === 'custom') rows.push({ name: 'התמהיל שלכם', r: E.simulate(mine, S.base, true), mine: true });
+    $('basketCmp').innerHTML = '<thead><tr><th>תמהיל</th><th>החזר בהתחלה</th><th>סך הכל</th><th>המחיר האמיתי</th></tr></thead><tbody>' +
+      rows.map(function (x) {
+        return '<tr' + (x.mine ? ' style="font-weight:700"' : '') + '><td>' + x.name + (x.mine ? ' <span class="badge">שלכם</span>' : '') + '</td><td class="n">' + fmt(x.r.first) + '</td><td class="n">' + fmt(x.r.total) + '</td><td class="n">' + x.r.rate.toFixed(2) + '%</td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  function renderChecks(res, sum, tracks) {
+    var out = [];
+    var amt = tracks.reduce(function (s, t) { return s + t.amount; }, 0);
+    var fixed = tracks.filter(function (t) { return T[t.type].kind === 'fixed'; }).reduce(function (s, t) { return s + t.amount; }, 0);
+    if (fixed / amt < 1 / 3 - 0.005) out.push(['bad', '!', 'לפי כללי בנק ישראל, לפחות שליש מהמשכנתא צריך להיות בריבית קבועה. בתמהיל הזה יש רק ' + Math.round(fixed / amt * 100) + '%, והבנק לא יאשר אותו.']);
+
+    var base = res.base;
+    var moving = tracks.filter(function (t) { return T[t.type].kind !== 'fixed' || T[t.type].indexed; }).reduce(function (s, t) { return s + t.amount; }, 0);
+    if (moving / amt < 0.005) out.push(['ok', '✓', 'כל ההלוואה בריבית קבועה ולא צמודה, ולכן ההחזר החודשי לא ישתנה, לא משנה מה יקרה במשק.']);
+    else out.push(['info', 'i', Math.round(moving / amt * 100) + '% מההלוואה במסלולים שההחזר בהם יכול להשתנות (ריבית משתנה או הצמדה למדד). אם בעתיד הריבית או המדד יעלו בצורה משמעותית, זה זמן טוב לבחון מחזור משכנתא. בלשונית "בדיקת מחזור" אפשר לבדוק את זה בכמה דקות.']);
+
+    if (state.income > 0) {
+      var ratio = base.first / state.income;
+      var pct = Math.round(ratio * 100) + '%';
+      if (ratio > 0.5) out.push(['bad', '!', 'ההחזר הוא ' + pct + ' מההכנסה שלכם. בנק ישראל לא מאפשר החזר של יותר מחצי מההכנסה, אז צריך הלוואה קטנה יותר או תקופה ארוכה יותר.']);
+      else if (ratio > 0.4) out.push(['warn', '~', 'ההחזר הוא ' + pct + ' מההכנסה. מעל 40% הבנקים בודקים את הבקשה בזהירות רבה יותר.']);
+      else if (ratio > 0.3) out.push(['info', 'i', 'ההחזר הוא ' + pct + ' מההכנסה. בדרך כלל נהוג לכוון לסביבות שליש מההכנסה, כדי שיישאר מרווח להוצאות אחרות.']);
+      else out.push(['ok', '✓', 'ההחזר הוא ' + pct + ' מההכנסה, בטווח הנוח.']);
+    } else {
+      out.push(['info', 'i', 'הוסיפו בשלב 1 כמה נכנס לכם בחודש, ונבדוק אם ההחזר סביר ביחס להכנסה.']);
+    }
+
+    if (base.index > amt * 0.05) out.push(['info', 'i', 'חלק מההלוואה צמוד למדד: כשהמחירים במשק עולים, גם החוב וההחזר החודשי עולים. בתרחיש הסביר ההצמדה לבד תעלה לכם ' + fmt(base.index) + '. כדאי לזכור שבדרך כלל גם המשכורות עולות עם הזמן, כך שהחזר גבוה יותר בעוד 20 שנה לא בהכרח יכביד באותה מידה.']);
+
+    $('checks').innerHTML = out.map(function (c) { return '<li class="chk ' + c[0] + '"><span class="ic" aria-hidden="true">' + c[1] + '</span><span>' + c[2] + '</span></li>'; }).join('');
+  }
+
+  /* ---------- chart ---------- */
+  var lastRes = null;
+  function niceStep(raw) { var p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+  function drawChart(res) {
+    lastRes = res;
+    var W = 640, H = 280, pl = 70, pr = 14, pt = 14, pb = 38;
+    var N = Math.max(res.good.monthly.length, res.base.monthly.length, res.hard.monthly.length);
+    var all = [].concat(res.good.monthly, res.base.monthly, res.hard.monthly);
+    var mn = Math.min.apply(null, all), mx = Math.max.apply(null, all);
+    if (mx - mn < mx * 0.1) { mn = mn * 0.9; mx = mx * 1.1; }
+    var step = niceStep((mx - mn) / 4);
+    var y0 = Math.floor(mn / step) * step, y1 = Math.ceil(mx / step) * step;
+    var X = function (m) { return pl + (m / N) * (W - pl - pr); };
+    var Y = function (v) { return pt + (1 - (v - y0) / (y1 - y0)) * (H - pt - pb); };
+    var g = '';
+    for (var v = y0; v <= y1 + 1e-6; v += step) {
+      g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" style="stroke:var(--line)" stroke-width="1"/>';
+      g += '<text x="' + (pl - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end" style="fill:var(--muted)" font-size="13">' + fmt(v) + '</text>';
+    }
+    var yrs = N / 12, xs = yrs > 20 ? 5 : yrs > 10 ? 2 : 1;
+    for (var yy = 0; yy <= yrs; yy += xs) {
+      g += '<text x="' + X(yy * 12) + '" y="' + (H - pb + 18) + '" text-anchor="middle" style="fill:var(--muted)" font-size="13">' + yy + '</text>';
+    }
+    g += '<text x="' + ((pl + W - pr) / 2) + '" y="' + (H - 4) + '" text-anchor="middle" style="fill:var(--muted)" font-size="13">שנים מתחילת ההלוואה</text>';
+    ['good', 'hard', 'base'].forEach(function (k) {
+      var d = res[k].monthly.map(function (p, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p).toFixed(1); }).join(' ');
+      var sel = k === state.scen;
+      g += '<path d="' + d + '" fill="none" style="stroke:' + SCOL[k] + '" stroke-width="' + (sel ? 3.5 : 2) + '" stroke-opacity="' + (sel ? 1 : 0.75) + '" stroke-linejoin="round"/>';
+    });
+    var s = res[state.scen];
+    g += '<circle cx="' + X(s.maxMonth - 1) + '" cy="' + Y(s.maxPay) + '" r="5" style="fill:' + SCOL[state.scen] + ';stroke:var(--surface)" stroke-width="2"/>';
+    g += '<line id="hoverLine" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" style="stroke:var(--muted)" stroke-dasharray="3 3" visibility="hidden"/>';
+    $('chart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="גרף ההחזר החודשי לאורך השנים בשלושה תרחישים" style="direction:ltr">' + g + '</svg>' +
+      '<div id="tip" class="note" style="margin-top:6px">העבירו את העכבר (או האצבע) על הגרף כדי לראות את ההחזר בכל שנה.</div>';
+    var svg = $('chart').querySelector('svg');
+    function hover(ev) {
+      var rect = svg.getBoundingClientRect();
+      var cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rect.left;
+      var x = cx / rect.width * W;
+      var m = Math.max(0, Math.min(N - 1, Math.round((x - pl) / (W - pl - pr) * N)));
+      var ln = $('hoverLine'); ln.setAttribute('x1', X(m)); ln.setAttribute('x2', X(m)); ln.setAttribute('visibility', 'visible');
+      var val = function (k) { var a = lastRes[k].monthly; return a[m] != null ? fmt(a[m]) : '—'; };
+      $('tip').innerHTML = '<b>שנה ' + (Math.floor(m / 12) + 1) + ':</b> ' +
+        '<span style="color:' + SCOL.good + '">טוב <span class="num">' + val('good') + '</span></span> · ' +
+        '<span style="color:' + SCOL.base + '">סביר <span class="num">' + val('base') + '</span></span> · ' +
+        '<span style="color:' + SCOL.hard + '">קשה <span class="num">' + val('hard') + '</span></span>';
+    }
+    svg.addEventListener('mousemove', hover);
+    svg.addEventListener('touchmove', hover, { passive: true });
+    svg.addEventListener('touchstart', hover, { passive: true });
+  }
+
+  /* ---------- FAQ ---------- */
+  var FAQ = [
+    ['מה זה בכלל "מסלול" במשכנתא?', 'משכנתא היא בדרך כלל כמה הלוואות קטנות שמחוברות יחד. כל אחת נקראת מסלול, ולכל מסלול יש כללים משלו: האם הריבית קבועה או משתנה, והאם החוב צמוד למדד. השילוב ביניהם נקרא "תמהיל".'],
+    ['מה ההבדל בין ריבית קבועה למשתנה?', 'בריבית קבועה, הריבית לא משתנה עד סוף ההלוואה. זה צפוי ובטוח, אבל בדרך כלל קצת יותר יקר. בריבית משתנה, הריבית יכולה לעלות או לרדת לפי מה שקורה במשק. היא לרוב זולה יותר בהתחלה, אבל יש בה סיכון.'],
+    ['מה זה "צמוד למדד"?', 'המדד מודד כמה המחירים במשק עלו (אינפלציה). אם המסלול צמוד למדד, החוב שלכם גדל יחד עם המחירים. למשל, אם המחירים עלו ב-3% השנה, גם יתרת החוב עלתה ב-3%. לכן מסלול צמוד יכול להיראות זול בהתחלה ולהתייקר עם הזמן.'],
+    ['מה זה פריים?', 'פריים היא ריבית בנק ישראל ועוד 1.5%. כשבנק ישראל מעלה או מוריד ריבית, ההחזר במסלול הפריים משתנה כבר מהחודש הבא. הבנק נותן לכם בדרך כלל הנחה מהפריים, למשל "פריים מינוס 0.5%".'],
+    ['מה זה "משתנה כל 5 שנים"?', 'הריבית קבועה במשך 5 שנים, ואז מתעדכנת לפי הריבית בשוק באותו זמן, וחוזר חלילה. בנקודות העדכון האלה מותר בדרך כלל גם לפרוע את המסלול בלי עמלה גדולה.'],
+    ['מה זה "סלים אחידים"?', 'שלושה תמהילים קבועים שבנק ישראל מחייב כל בנק להציע לכל לקוח: הכל בריבית קבועה; שליש קבועה, שליש משתנה צמודה ושליש פריים; וחצי קבועה וחצי פריים. כיוון שכולם מציעים בדיוק אותו דבר, קל להשוות ולראות איזה בנק זול יותר.'],
+    ['כמה מההכנסה סביר להוציא על משכנתא?', 'בנק ישראל לא מאפשר החזר של יותר מ-50% מההכנסה הפנויה, ומעל 40% הבנקים מחמירים. בפועל, הרבה מומחים ממליצים להישאר סביב שליש מההכנסה, כדי שיישאר מרווח להוצאות לא צפויות.'],
+    ['כמה אפשר לקבל מימון?', 'לדירה ראשונה (דירה יחידה) אפשר לקבל עד 75% ממחיר הדירה. למי שמשפר דיור עד 70%, ולדירה להשקעה עד 50%. את השאר צריך להביא מהון עצמי.'],
+    ['האם אפשר להתמקח עם הבנק?', 'כן, ומומלץ. הריבית שהבנק מציע היא נקודת פתיחה. כשיש בידכם הצעות מכמה בנקים, אפשר להראות לכל בנק את ההצעה הטובה ביותר שקיבלתם ולבקש שישפר. הרבה פעמים זה חוסך עשרות אלפי שקלים לאורך חיי ההלוואה.'],
+    ['מה זה אישור עקרוני?', 'מסמך שהבנק נותן לפני שבחרתם סופית, ובו התנאים שהוא מוכן לתת לכם, כולל שלושת הסלים האחידים. הבנק חייב לתת אותו תוך כמה ימי עסקים, והוא תקף לכמה שבועות. כדאי לבקש כזה מכמה בנקים.'],
+    ['מה זה מחזור משכנתא?', 'להחליף את המשכנתא הקיימת (או חלק ממנה) במשכנתא חדשה בתנאים טובים יותר, בבנק שלכם או בבנק אחר. זה יכול להשתלם כשהריביות בשוק ירדו, אבל צריך לבדוק את עמלת הפירעון המוקדם.'],
+    ['מה ההבדל בין "משתנה כל שנה", "כל שנתיים" ו"כל 5 שנים"?', 'בכל המסלולים האלה הריבית קבועה לתקופה מסוימת, ואז מתעדכנת לפי מה שקורה בשוק. ככל שהתקופה קצרה יותר, ההחזר מגיב מהר יותר לשינויים, לטוב ולרע. בנקודת העדכון אפשר בדרך כלל לפרוע את המסלול בלי עמלה גדולה.'],
+    ['איך משווים הצעות עם תמהילים שונים?', 'אי אפשר להשוות רק לפי ההחזר החודשי, כי הצעה עם תקופה ארוכה יותר תמיד תיראה זולה בחודש ויקרה בסך הכל. לכן אנחנו מחשבים "מחיר אמיתי": הריבית השנתית שמשלמים בפועל על כל ההלוואה, כולל ההצמדה הצפויה למדד. ההצעה עם המחיר האמיתי הנמוך יותר היא הזולה.'],
+    ['כדאי לקצר את תקופת המשכנתא?', 'קיצור התקופה מעלה את ההחזר החודשי, אבל חוסך הרבה כסף בריבית, ובדרך כלל גם מקבלים ריבית נמוכה יותר. זה מתאים אם ההחזר אחרי הקיצור עדיין נוח (בערך עד שליש מההכנסה). אם רוצים לקצר, הכי משתלם לקצר את המסלול היקר ביותר.'],
+    ['האם הנתונים שאני מזין נשלחים לאנשהו?', 'לא. כל החישובים נעשים בדפדפן שלכם, והנתונים נשמרים רק אצלכם במכשיר.']
+  ];
+  $('faqList').innerHTML = FAQ.map(function (q) { return '<details><summary>' + esc(q[0]) + '</summary><p>' + esc(q[1]) + '</p></details>'; }).join('');
+
+  var M = E.MARKET;
+  $('mkNote').innerHTML = 'הריביות מולאו מראש לפי ממוצעים מעודכנים ל' + M.label + ', ופריים של <span class="num">' + M.prime + '%</span>. קיבלתם הצעה מהבנק? הקלידו את הריביות שלכם במקום.';
+  $('marketStrip').innerHTML = '<span><b>נתוני השוק</b> · עודכנו ב' + M.label + '</span><span>ריבית בנק ישראל <b class="num">' + M.boiRate + '%</b></span><span>פריים <b class="num">' + M.prime + '%</b></span><span>מדד ' + M.cpi.month + ' <b class="num">' + (M.cpi.monthly >= 0 ? '+' : '') + M.cpi.monthly + '%</b></span><span>אינפלציה ב-12 חודשים <b class="num">' + M.cpi.annual + '%</b></span>';
+  renderBaskets(); renderTracks(); renderSeg(); calc();
+  var h = (location.hash || '').slice(1);
+  if (h && h !== 'sim') { var tb = document.querySelector('.tab[data-view="' + h + '"]'); if (tb) setTimeout(function () { tb.click(); }, 0); }
+})();
+(function () {
+  var E = ENGINE, T = E.TRACKS, BASE = E.SCENARIOS.base;
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(x) { return '₪' + Math.round(x).toLocaleString('he-IL'); }
+  function digits(s) { var n = parseInt(String(s).replace(/[^\d]/g, ''), 10); return isNaN(n) ? 0 : n; }
+  function num(s) { var n = parseFloat(String(s).replace(',', '.')); return isNaN(n) ? 0 : n; }
+  var KEY = 'mashkanta-refi-v2';
+
+  function example() {
+    return { example: true, remember: true,
+      tracks: [
+        { type: 'kf', bal: 580000, rate: 5.2, years: 22, age: 3, reset: 0, fee: 0 },
+        { type: 'prime', bal: 290000, rate: 5.25, years: 22, age: 3, reset: 0, fee: 0 },
+        { type: 'mz', bal: 240000, rate: 3.9, years: 22, age: 3, reset: 2, fee: 0 }
+      ] };
+  }
+  function blank() { return { type: 'kf', bal: 0, rate: 0, years: 20, age: 0, reset: 0, fee: 0 }; }
+  var st = example();
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.tracks && sv.tracks.length) st = sv; } catch (e) {}
+  function save() {
+    try { if (st.remember && !st.example) localStorage.setItem(KEY, JSON.stringify(st)); else localStorage.removeItem(KEY); } catch (e) {}
+  }
+
+  /* ---------- the decision mechanism ---------- */
+  // לכל מסלול: משווים לריבית הממוצעת בשוק היום. אם הריבית שלכם גבוהה יותר,
+  // מחשבים כמה תחסכו אם תקבלו את הממוצע, אחרי עמלת הפירעון (שלכם, או הערכה שלנו).
+  function estFee(t) {
+    return E.prepayFee({ type: t.type, amount: t.bal, rate: t.rate, years: t.years, resetMonth: Math.round((t.reset || 0) * 12), age: t.age }, T[t.type].rate);
+  }
+  function compute(s) {
+    var rows = [], fees = 0, oldM = 0, newM = 0, bal = 0, saving = 0, above = 0, names = [];
+    s.tracks.forEach(function (t) {
+      if (!(t.bal > 0) || !(t.years > 0) || !(t.rate > 0)) return;
+      bal += t.bal;
+      var market = T[t.type].rate, gap = t.rate - market;
+      var fee = t.fee > 0 ? t.fee : estFee(t);
+      var resetM = Math.round((t.reset || 0) * 12);
+      var o = E.simTrack({ type: t.type, amount: t.bal, rate: t.rate, years: t.years, resetMonth: resetM }, BASE);
+      var n = E.simTrack({ type: t.type, amount: t.bal + fee, rate: market, years: t.years }, BASE);
+      var sv = o.totalPaid - n.totalPaid;
+      var worth = gap > 0.05 && sv > 0;
+      if (gap > 0.05) above++;
+      if (worth) { saving += sv; fees += fee; oldM += o.payments[0]; newM += n.payments[0]; names.push(T[t.type].name); }
+      rows.push({ t: t, market: market, gap: gap, fee: fee, userFee: t.fee > 0, save: sv, worth: worth });
+    });
+    if (names.length) saving -= E.OP_FEE;
+    var threshold = Math.max(10000, bal * 0.01);
+    var level = !rows.length ? 'empty' : saving >= threshold ? 'go' : saving > 0 ? 'maybe' : 'no';
+    return { rows: rows, fees: fees, saving: saving, oldM: oldM, newM: newM, bal: bal, above: above, names: names, level: level };
+  }
+
+  function verdictText(r) {
+    var list = r.names.join(', ');
+    var partial = r.names.length && r.names.length < r.rows.length;
+    if (r.level === 'go') return { cls: 'go', dot: 'var(--ok)', title: 'כדאי לבדוק מחזור מול הבנק',
+      text: 'הריבית שלכם ב' + list + ' גבוהה מהממוצע שהבנקים נותנים היום. אם תקבלו את הריבית הממוצעת, תחסכו כ-' + fmt(r.saving) + ' לאורך חיי המשכנתא, אחרי עמלות הפירעון.' + (partial ? ' את שאר המסלולים לא כדאי למחזר.' : '') + ' הצעד הבא: לבקש מהבנק דוח סילוקין, ולשאול אם הוא מוכן להוריד לכם את הריבית.' };
+    if (r.level === 'maybe') return { cls: 'maybe', dot: 'var(--warn)', title: 'החיסכון קטן',
+      text: 'ב' + list + ' הריבית שלכם קצת מעל הממוצע, אבל אחרי עמלות הפירעון החיסכון יהיה רק כ-' + fmt(r.saving) + '. לא חייבים מחזור מלא: אפשר פשוט לבקש מהבנק להוריד את הריבית.' };
+    if (r.above) return { cls: 'no', dot: 'var(--muted)', title: 'כרגע מחזור לא משתלם',
+      text: 'בחלק מהמסלולים הריבית שלכם גבוהה מהממוצע, אבל עמלת הפירעון המוקדם גדולה מהחיסכון. כדאי לבדוק שוב בעוד שנה, או לקראת נקודת שינוי הריבית במסלול משתנה, כשהעמלה קטנה.' };
+    return { cls: 'no', dot: 'var(--ok)', title: 'הריביות שלכם טובות',
+      text: 'בכל המסלולים הריבית שלכם שווה לממוצע בשוק או נמוכה ממנו, ולכן אין סיבה למחזר כרגע. נמשיך לבדוק מול נתוני השוק המתעדכנים.' };
+  }
+
+  /* ---------- inputs ---------- */
+  function renderTracks() {
+    var opts = function (sel) { return Object.keys(T).map(function (k) { return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + T[k].name + '</option>'; }).join(''); };
+    $('refiTracks').innerHTML = st.tracks.map(function (t, i) {
+      var isVar = T[t.type].kind === 'var';
+      return '<div class="rrow" data-i="' + i + '">' +
+        '<div class="tsel"><label for="rt' + i + '">מסלול</label><select class="input rtype" id="rt' + i + '">' + opts(t.type) + '</select></div>' +
+        '<button type="button" class="rm" aria-label="הסרת המסלול"' + (st.tracks.length < 2 ? ' style="visibility:hidden"' : '') + '>×</button>' +
+        '<div><label for="rb' + i + '">יתרה לסילוק (₪)</label><input class="input tnum rbal" id="rb' + i + '" inputmode="numeric" value="' + (t.bal ? t.bal.toLocaleString('he-IL') : '') + '"></div>' +
+        RATEUI.html('rr' + i, t, 'הריבית שלכם (%)') +
+        '<div><label for="ry' + i + '">שנים שנותרו</label><input class="input tnum ryears" id="ry' + i + '" inputmode="decimal" value="' + (t.years || '') + '"></div>' +
+        '<div><label for="ra' + i + '">נלקחה לפני (שנים)</label><input class="input tnum rage" id="ra' + i + '" inputmode="decimal" value="' + (t.age || 0) + '"></div>' +
+        (isVar ? '<div><label for="rs' + i + '">הריבית תתעדכן בעוד (שנים)</label><input class="input tnum rreset" id="rs' + i + '" inputmode="decimal" value="' + (t.reset || 0) + '"></div>' : '') +
+        '<div><label for="rf' + i + '">עמלת פירעון (₪, לא חובה)</label><input class="input tnum rfee" id="rf' + i + '" inputmode="numeric" value="' + (t.fee ? t.fee.toLocaleString('he-IL') : '') + '"><div class="feeest" id="rfe' + i + '"></div></div>' +
+        '</div>';
+    }).join('');
+    $('refiTracks').querySelectorAll('.rrow').forEach(function (row) {
+      var i = +row.dataset.i, t = st.tracks[i];
+      function on(sel, ev, fn) { var el = row.querySelector(sel); if (el) el.addEventListener(ev, fn); }
+      on('.rtype', 'change', function () { t.type = this.value; if (T[t.type].kind === 'var') t.reset = Math.min(t.reset || 99, T[t.type].period / 12); if (T[t.type].kind === 'prime' && !t.rate) t.rate = E.PRIME_NOW; touched(); renderTracks(); calc(); });
+      on('.rbal', 'input', function () { t.bal = digits(this.value); touched(); calc(); });
+      on('.rbal', 'blur', function () { this.value = t.bal ? t.bal.toLocaleString('he-IL') : ''; });
+      RATEUI.bind(row, t, function () { touched(); calc(); });
+      on('.ryears', 'input', function () { t.years = Math.min(30, num(this.value)); touched(); calc(); });
+      on('.rage', 'input', function () { t.age = num(this.value); touched(); calc(); });
+      on('.rreset', 'input', function () { t.reset = Math.min(T[t.type].period / 12, num(this.value)); touched(); calc(); });
+      on('.rfee', 'input', function () { t.fee = digits(this.value); touched(); calc(); });
+      on('.rfee', 'blur', function () { this.value = t.fee ? t.fee.toLocaleString('he-IL') : ''; });
+      on('.rm', 'click', function () { st.tracks.splice(i, 1); touched(); renderTracks(); calc(); });
+    });
+    $('refiExample').hidden = !st.example;
+  }
+  function touched() { if (st.example) { st.example = false; $('refiExample').hidden = true; } }
+
+  $('refiAdd').addEventListener('click', function () { st.tracks.push(blank()); touched(); renderTracks(); calc(); });
+  $('refiClear').addEventListener('click', function () {
+    st = { example: false, remember: st.remember, tracks: [blank()] };
+    renderAll(); var f = document.querySelector('#refiTracks .rbal'); if (f) f.focus();
+  });
+  $('refiRemember').addEventListener('change', function () { st.remember = this.checked; save(); banner(); });
+
+  /* ---------- results ---------- */
+  function calc() {
+    save();
+    var r = compute(st);
+    // fee estimate hints
+    st.tracks.forEach(function (t, i) {
+      var el = $('rfe' + i); if (!el) return;
+      if (!(t.bal > 0) || !(t.rate > 0) || !(t.years > 0)) { el.textContent = ''; return; }
+      var f = estFee(t);
+      el.textContent = T[t.type].kind === 'prime' ? 'בפריים אין עמלת היוון' : (t.fee > 0 ? 'ההערכה שלנו: ' + fmt(f) : 'אם תשאירו ריק, נשתמש בהערכה: ' + fmt(f));
+    });
+    $('refiCmp').innerHTML = r.rows.length ? '<thead><tr><th>מסלול</th><th>הריבית שלכם</th><th>ממוצע היום</th><th>הפרש</th></tr></thead><tbody>' +
+      r.rows.map(function (x) {
+        var g = Math.round(x.gap * 100) / 100;
+        return '<tr><td>' + T[x.t.type].name + '</td><td class="n">' + RATEUI.label(x.t.type, x.t.rate) + '</td><td class="n">' + RATEUI.label(x.t.type, x.market) + '</td><td class="n" style="color:' + (g > 0.05 ? 'var(--bad)' : 'var(--ok)') + ';font-weight:600">' + (g > 0 ? '+' : '') + g.toFixed(2) + '%</td></tr>';
+      }).join('') + '</tbody>' : '';
+
+    if (r.level === 'empty') {
+      $('refiVerdict').className = 'verdict no';
+      $('refiVerdict').innerHTML = '<p class="vt">הזינו את המשכנתא שלכם</p><p>מלאו לפחות מסלול אחד עם יתרה, ריבית ומספר שנים.</p>';
+      ['rfSave', 'rfMonthly', 'rfFees', 'rfCount'].forEach(function (id) { $(id).textContent = '—'; });
+      $('rfMonthlyS').textContent = '';
+      $('refiTable').innerHTML = ''; $('refiTips').innerHTML = ''; banner(); return;
+    }
+    var v = verdictText(r);
+    $('refiVerdict').className = 'verdict ' + v.cls;
+    $('refiVerdict').innerHTML = '<p class="vt">' + v.title + '</p><p>' + v.text + '</p>';
+    $('rfSave').textContent = r.saving > 0 ? fmt(r.saving) : '₪0';
+    var dm = r.oldM - r.newM;
+    $('rfMonthly').textContent = r.names.length ? (dm >= 0 ? '−' : '+') + fmt(Math.abs(dm)) : '—';
+    $('rfMonthlyS').textContent = r.names.length ? 'במסלולים שכדאי למחזר' : '';
+    $('rfFees').textContent = r.names.length ? fmt(r.fees + E.OP_FEE) : '—';
+    $('rfCount').textContent = r.above + ' מתוך ' + r.rows.length;
+    $('refiTable').innerHTML = '<thead><tr><th>מסלול</th><th>עמלת פירעון</th><th>חיסכון אם תקבלו את הממוצע</th><th>כדאי לבדוק?</th></tr></thead><tbody>' +
+      r.rows.map(function (x) {
+        return '<tr><td>' + T[x.t.type].name + '</td><td class="n">' + fmt(x.fee) + (x.userFee ? '' : ' <small style="color:var(--muted)">(הערכה)</small>') + '</td>' +
+          '<td class="n" style="color:' + (x.worth ? 'var(--ok)' : 'var(--muted)') + ';font-weight:600">' + (x.gap > 0.05 ? (x.save > 0 ? fmt(x.save) : 'העמלה גבוהה מהחיסכון') : 'הריבית שלכם טובה') + '</td>' +
+          '<td>' + (x.worth ? '<b style="color:var(--ok)">כן</b>' : 'לא') + '</td></tr>';
+      }).join('') + '</tbody>';
+    tips(r);
+    banner();
+  }
+
+  function tips(r) {
+    var out = [];
+    r.rows.forEach(function (x) {
+      var t = x.t, k = T[t.type];
+      if (k.kind === 'var' && x.gap > 0.05 && !x.worth && t.reset > 0 && t.reset <= 1.5) out.push(['ok', '✓', 'מסלול ה' + k.name + ' מגיע לנקודת שינוי ריבית בעוד ' + (t.reset < 1 ? 'פחות משנה' : 'כשנה') + '. ביום הזה אפשר לפרוע אותו בלי עמלת היוון, ואז מחזור שלו כנראה ישתלם.']);
+      if (k.kind !== 'prime' && x.gap > 0.05 && !x.worth && ((t.age >= 2 && t.age < 3) || (t.age >= 4 && t.age < 5))) out.push(['info', 'i', 'בעוד פחות משנה ההלוואה ב' + k.name + ' תעבור ' + (t.age < 3 ? '3' : '5') + ' שנים, והעמלה תקבל הנחה ' + (t.age < 3 ? 'של 20%' : 'גדולה יותר (30% במקום 20%)') + '. אז כדאי לבדוק שוב.']);
+    });
+    out = out.filter(Boolean);
+    if (r.names.length) {
+      out.push(['info', 'i', 'לפני שעוברים בנק, פנו קודם לבנק שלכם עם התוצאה ובקשו שיוריד ריבית. הרבה פעמים זה עובד, וחוסך את כל הטרחה.']);
+      out.push(['info', 'i', 'בקשו מהבנק דוח סילוקין רשמי. הוא חינמי, ומופיעה בו עמלת הפירעון המדויקת. אפשר להקליד אותה כאן ולקבל חישוב מדויק יותר.']);
+      out.push(['info', 'i', 'תנו לבנק הודעה בכתב לפחות 10 ימים לפני הפירעון. כך חוסכים עמלה של 0.1% מהסכום.']);
+      if (r.rows.some(function (x) { return x.worth && T[x.t.type].indexed; })) out.push(['info', 'i', 'במסלולים צמודים למדד, פירעון בין ה-16 לסוף החודש פוטר אתכם מעמלת "ממוצע המדד".']);
+    } else {
+      out.push(['info', 'i', 'נתוני השוק מתעדכנים כל חודש. אם תסמנו "לזכור את המשכנתא שלי", נבדוק אותה שוב בכל ביקור ונגיד לכם כשמחזור מתחיל להשתלם.']);
+    }
+    $('refiTips').innerHTML = out.map(function (c) { return '<li class="chk ' + c[0] + '"><span class="ic" aria-hidden="true">' + c[1] + '</span><span>' + c[2] + '</span></li>'; }).join('');
+  }
+
+  /* ---------- "my mortgage" banner on every visit ---------- */
+  function banner() {
+    var b = $('myBanner');
+    if (!st.remember || st.example) { b.hidden = true; return; }
+    var r = compute(st);
+    if (r.level === 'empty') { b.hidden = true; return; }
+    var v = verdictText(r);
+    var short = r.level === 'go' ? 'חיסכון אפשרי של כ-' + fmt(r.saving) + '. זה זמן טוב לדבר עם הבנק.'
+      : r.level === 'maybe' ? 'יש חיסכון קטן (כ-' + fmt(r.saving) + '). אפשר לבקש מהבנק הנחה בריבית.'
+      : 'הכל בסדר כרגע. נבדוק שוב בביקור הבא.';
+    b.innerHTML = '<div class="bt"><b><span class="status-dot" style="background:' + v.dot + '"></span>המשכנתא שלי: ' + v.title + '</b><span>' + short + ' נבדק מול נתוני השוק של ' + E.MARKET_DATE + '.</span></div><button type="button" class="btn sm" id="bannerGo">לפרטים</button>';
+    b.hidden = false;
+    $('bannerGo').addEventListener('click', function () { document.querySelector('[data-view="refi"]').click(); });
+  }
+
+  function renderAll() {
+    $('refiRemember').checked = !!st.remember;
+    $('refiMk').textContent = E.MARKET_DATE;
+    renderTracks(); calc();
+  }
+  renderAll();
+})();
+(function () {
+  var E = ENGINE, T = E.TRACKS, BASE = E.SCENARIOS.base;
+  var $ = function (id) { return document.getElementById(id); };
+  function fmt(x) { return '₪' + Math.round(x).toLocaleString('he-IL'); }
+  function digits(s) { var n = parseInt(String(s).replace(/[^\d]/g, ''), 10); return isNaN(n) ? 0 : n; }
+  function num(s) { var n = parseFloat(String(s).replace(',', '.')); return isNaN(n) ? 0 : n; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var KEY = 'mashkanta-offers-v2';
+
+  function example() {
+    return { example: true, income: 0, name: '', showNames: true, mailOffer: null, termOffer: null, offers: [
+      { tracks: [{ type: 'kf', amount: 340000, rate: 4.55, years: 25 }, { type: 'mz', amount: 330000, rate: 3.35, years: 25 }, { type: 'prime', amount: 330000, rate: 4.25, years: 25 }] },
+      { tracks: [{ type: 'kf', amount: 500000, rate: 4.4, years: 30 }, { type: 'prime', amount: 500000, rate: 4.35, years: 30 }] },
+      { tracks: [{ type: 'kf', amount: 400000, rate: 4.5, years: 20 }, { type: 'v2z', amount: 200000, rate: 3.3, years: 20 }, { type: 'prime', amount: 400000, rate: 4.15, years: 25 }] }
+    ] };
+  }
+  var st = example();
+  try { var sv = JSON.parse(localStorage.getItem(KEY) || 'null'); if (sv && sv.offers && sv.offers.length) st = sv; } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+  function touched() { if (st.example) { st.example = false; $('cmpExample').hidden = true; } }
+  var LETTERS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו'];
+  function bankName(o, i) { return "בנק " + LETTERS[i] + "'"; }
+  function valid(o) { return o.tracks.filter(function (t) { return t.amount > 0 && t.years > 0 && t.rate > 0; }); }
+  function rateLabel(type, r) { return RATEUI.label(type, r); }
+
+  /* ---------- inputs ---------- */
+  function renderOffers() {
+    var opts = function (sel) { return Object.keys(T).map(function (k) { return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + T[k].name + '</option>'; }).join(''); };
+    $('offerList').innerHTML = st.offers.map(function (o, j) {
+      return '<div class="offerbox" data-j="' + j + '">' +
+        '<div class="obhead"><h3 class="obtitle">' + bankName(o, j) + '</h3>' +
+        (st.offers.length > 1 ? '<button type="button" class="btn sm ghost orm">הסרת ההצעה</button>' : '') + '</div>' +
+        o.tracks.map(function (t, i) {
+          var id = j + '-' + i;
+          return '<div class="trow" data-i="' + i + '">' +
+            '<div class="tsel"><label for="ct' + id + '">מסלול</label><select class="input ctype" id="ct' + id + '">' + opts(t.type) + '</select></div>' +
+            '<div><label for="ca' + id + '">סכום (₪)</label><input class="input tnum camt" id="ca' + id + '" inputmode="numeric" value="' + (t.amount ? t.amount.toLocaleString('he-IL') : '') + '"></div>' +
+            RATEUI.html('cr' + id, t) +
+            '<div><label for="cy' + id + '">שנים</label><input class="input tnum cyears" id="cy' + id + '" inputmode="numeric" value="' + (t.years || '') + '"></div>' +
+            '<button type="button" class="rm" aria-label="הסרת המסלול"' + (o.tracks.length < 2 ? ' style="visibility:hidden"' : '') + '>×</button></div>';
+        }).join('') +
+        '<div class="tfoot"><button type="button" class="btn sm otadd">+ מסלול</button><span class="sum osum"></span></div></div>';
+    }).join('');
+
+    $('offerList').querySelectorAll('.offerbox').forEach(function (box) {
+      var j = +box.dataset.j, o = st.offers[j];
+      var orm = box.querySelector('.orm'); if (orm) orm.addEventListener('click', function () { st.offers.splice(j, 1); st.mailOffer = st.termOffer = null; touched(); renderOffers(); results(); });
+      box.querySelector('.otadd').addEventListener('click', function () { o.tracks.push({ type: 'prime', amount: 0, rate: T.prime.rate, years: o.tracks[0] ? o.tracks[0].years : 25 }); touched(); renderOffers(); results(); });
+      box.querySelectorAll('.trow').forEach(function (row) {
+        var t = o.tracks[+row.dataset.i];
+        row.querySelector('.ctype').addEventListener('change', function () { t.type = this.value; t.rate = T[t.type].rate; touched(); renderOffers(); results(); });
+        row.querySelector('.camt').addEventListener('input', function () { t.amount = digits(this.value); touched(); results(); });
+        row.querySelector('.camt').addEventListener('blur', function () { this.value = t.amount ? t.amount.toLocaleString('he-IL') : ''; });
+        RATEUI.bind(row, t, function () { touched(); results(); });
+        row.querySelector('.cyears').addEventListener('input', function () { t.years = Math.max(0, Math.min(30, Math.round(num(this.value)))); touched(); results(); });
+        row.querySelector('.rm').addEventListener('click', function () { o.tracks.splice(+row.dataset.i, 1); touched(); renderOffers(); results(); });
+      });
+    });
+    $('cmpExample').hidden = !st.example;
+    $('cmpAdd').hidden = st.offers.length >= 6;
+  }
+
+  /* ---------- results ---------- */
+  function analyse() {
+    return st.offers.map(function (o, j) {
+      var tr = valid(o);
+      if (!tr.length) return { j: j, name: bankName(o, j), r: null, tracks: tr };
+      var r = E.simulate(tr, BASE, true);
+      var amt = r.borrowed;
+      var fixed = tr.filter(function (t) { return T[t.type].kind === 'fixed'; }).reduce(function (s, t) { return s + t.amount; }, 0);
+      var moving = tr.filter(function (t) { return T[t.type].kind !== 'fixed' || T[t.type].indexed; }).reduce(function (s, t) { return s + t.amount; }, 0);
+      var ys = tr.map(function (t) { return t.years; });
+      return { j: j, name: bankName(o, j), r: r, tracks: tr, fixedShare: fixed / amt, movingShare: moving / amt, minY: Math.min.apply(null, ys), maxY: Math.max.apply(null, ys) };
+    });
+  }
+
+  function results() {
+    save();
+    st.offers.forEach(function (o, j) {
+      var s = valid(o).reduce(function (a, t) { return a + t.amount; }, 0);
+      var el = document.querySelector('.offerbox[data-j="' + j + '"] .osum'); if (el) el.textContent = 'סך הכל: ' + fmt(s);
+    });
+    var A = analyse(), ok = A.filter(function (a) { return a.r; });
+    var byRate = ok.slice().sort(function (a, b) { return a.r.rate - b.r.rate; });
+    var top = byRate[0];
+
+    // verdict
+    var vd = $('cmpVerdict');
+    if (ok.length < 2) {
+      vd.className = 'verdict no';
+      vd.innerHTML = '<p class="vt">הזינו לפחות שתי הצעות</p><p>לכל הצעה: שם הבנק, ולכל מסלול סכום, ריבית ומספר שנים.</p>';
+    } else {
+      var worst = byRate[byRate.length - 1];
+      var txt = 'המחיר האמיתי שלה הוא <b class="num">' + top.r.rate.toFixed(2) + '%</b> בשנה, לעומת <b class="num">' + worst.r.rate.toFixed(2) + '%</b> בהצעה היקרה ביותר.';
+      var lowM = ok.slice().sort(function (a, b) { return a.r.first - b.r.first; })[0];
+      if (lowM.j !== top.j) {
+        var why = lowM.maxY > top.maxY ? 'כי התקופה שם ארוכה יותר' : 'בגלל התמהיל';
+        var extra = (lowM.r.perShekel - top.r.perShekel) * lowM.r.borrowed;
+        txt += ' שימו לב: ב' + esc(lowM.name) + ' ההחזר החודשי נמוך יותר (' + fmt(lowM.r.first) + ' לעומת ' + fmt(top.r.first) + '), ' + why + '. אבל על כל ₪1 תחזירו שם יותר' + (extra > 1000 ? ', בערך ' + fmt(extra) + ' יותר בסך הכל' : '') + '.';
+      }
+      vd.className = 'verdict go';
+      vd.innerHTML = '<p class="vt">ההצעה של ' + esc(top.name) + ' הכי זולה</p><p>' + txt + '</p>';
+    }
+
+    // warnings
+    var warn = [];
+    var amts = ok.map(function (a) { return a.r.borrowed; });
+    if (ok.length > 1 && Math.max.apply(null, amts) - Math.min.apply(null, amts) > Math.max.apply(null, amts) * 0.01) warn.push(['info', 'i', 'ההצעות לא באותו סכום. לכן כדאי להסתכל על "המחיר האמיתי" ועל "על כל ₪1", שלא תלויים בגודל ההלוואה.']);
+    ok.forEach(function (a) { if (a.fixedShare < 1 / 3 - 0.005) warn.push(['bad', '!', 'בהצעה של ' + esc(a.name) + ' רק ' + Math.round(a.fixedShare * 100) + '% בריבית קבועה. לפי כללי בנק ישראל צריך לפחות שליש, אז כנראה חסר בה מסלול או שהוקלד סכום לא נכון.']); });
+    $('cmpWarn').innerHTML = warn.map(function (c) { return '<li class="chk ' + c[0] + '"><span class="ic" aria-hidden="true">' + c[1] + '</span><span>' + c[2] + '</span></li>'; }).join('');
+
+    // metrics table
+    var rows = [
+      ['סכום ההלוואה', function (a) { return fmt(a.r.borrowed); }, null],
+      ['תקופה', function (a) { return a.minY === a.maxY ? a.minY + ' שנים' : a.minY + '–' + a.maxY + ' שנים'; }, null],
+      ['החזר חודשי בהתחלה', function (a) { return fmt(a.r.first); }, function (a) { return a.r.first; }],
+      ['החזר מקסימלי (תרחיש סביר)', function (a) { return fmt(Math.max(a.r.maxPay, a.r.first)); }, function (a) { return Math.max(a.r.maxPay, a.r.first); }],
+      ['סך הכל תחזירו', function (a) { return fmt(a.r.total); }, function (a) { return a.r.total; }],
+      ['על כל ₪1 תחזירו', function (a) { return '₪' + a.r.perShekel.toFixed(2); }, function (a) { return a.r.perShekel; }],
+      ['<b>המחיר האמיתי</b> (ריבית משוקללת בשנה)', function (a) { return '<b>' + a.r.rate.toFixed(2) + '%</b>'; }, function (a) { return a.r.rate; }],
+      ['בריבית קבועה', function (a) { return Math.round(a.fixedShare * 100) + '%'; }, null],
+      ['במסלולים שההחזר בהם יכול להשתנות', function (a) { return Math.round(a.movingShare * 100) + '%'; }, null]
+    ];
+    $('cmpTable').innerHTML = ok.length ? '<thead><tr><th></th>' + ok.map(function (a) { return '<th>' + esc(a.name) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      rows.map(function (rw) {
+        var bestV = rw[2] && ok.length > 1 ? Math.min.apply(null, ok.map(rw[2])) : null;
+        return '<tr><td class="lbl">' + rw[0] + '</td>' + ok.map(function (a) {
+          var isBest = bestV != null && Math.abs(rw[2](a) - bestV) < 1e-9;
+          return '<td class="n' + (isBest ? ' best' : '') + '">' + rw[1](a) + '</td>';
+        }).join('') + '</tr>';
+      }).join('') + '</tbody>' : '';
+
+    // term insights
+    var tsel = $('termOffer');
+    var ti = st.termOffer != null && A[st.termOffer] && A[st.termOffer].r ? st.termOffer : (top ? top.j : (ok[0] ? ok[0].j : null));
+    tsel.innerHTML = ok.map(function (a) { return '<option value="' + a.j + '"' + (a.j === ti ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('');
+    $('cmpTerm').innerHTML = ti != null ? TERM.html(A[ti].tracks, st.income) : '';
+
+    mail(A, ok, top);
+  }
+
+  /* ---------- email ---------- */
+  function mail(A, ok, top) {
+    var sel = $('mailBank');
+    var idx = st.mailOffer != null && A[st.mailOffer] && A[st.mailOffer].r ? st.mailOffer : (top ? top.j : null);
+    sel.innerHTML = ok.map(function (a) { return '<option value="' + a.j + '"' + (a.j === idx ? ' selected' : '') + '>' + esc(a.name) + '</option>'; }).join('');
+    if (idx == null) { $('mailText').value = ''; return; }
+    var me = A[idx], better = [], above = [], target = [];
+    me.tracks.forEach(function (t) {
+      var bestRate = null, bestA = null, bestY = 0;
+      ok.forEach(function (a) {
+        if (a.j === idx) return;
+        a.tracks.forEach(function (o) {
+          if (o.type === t.type && o.years >= t.years - 3 && (bestRate == null || o.rate < bestRate)) { bestRate = o.rate; bestA = a; bestY = o.years; }
+        });
+      });
+      var tr = t.rate;
+      if (bestRate != null && bestRate <= t.rate - 0.05) {
+        better.push('• ' + T[t.type].name + ': אצלכם ' + rateLabel(t.type, t.rate) + ' ל-' + t.years + ' שנים, ' + 'בבנק אחר' + ' הוצע לי ' + rateLabel(t.type, bestRate) + ' ל-' + bestY + ' שנים.');
+        tr = bestRate;
+      }
+      if (t.rate > T[t.type].rate + 0.05 && tr > T[t.type].rate) {
+        above.push('• ' + T[t.type].name + ': אצלכם ' + rateLabel(t.type, t.rate) + ', והממוצע בשוק הוא ' + rateLabel(t.type, T[t.type].rate) + '.');
+        if (tr === t.rate) tr = T[t.type].rate;
+      }
+      target.push(Object.assign({}, t, { rate: Math.round(tr * 100) / 100 }));
+    });
+    var cur = me.r, tgt = E.simulate(target, BASE);
+    var L = ['נושא: בקשה לשיפור תנאי המשכנתא', '', 'שלום רב,', ''];
+    L.push('אני בתהליך לקיחת משכנתא בסך ' + fmt(cur.borrowed) + ', וקיבלתי מכם הצעה (אישור עקרוני). השוויתי אותה להצעות של בנקים נוספים ולממוצעים שמפרסם בנק ישראל.');
+    if (top && top.j !== idx) {
+      var diff = (me.r.perShekel - top.r.perShekel) * me.r.borrowed;
+      if (diff > 1000) { L.push(''); L.push('בסך הכל, ההצעה הטובה ביותר שקיבלתי זולה יותר בכ-' + fmt(diff) + ' לאורך חיי ההלוואה.'); }
+    }
+    if (!better.length && !above.length) {
+      L.push('');
+      L.push('ההצעה שלכם טובה בכל המסלולים ביחס להצעות האחרות שקיבלתי, ואשמח להתקדם איתכם. לפני שאחליט, אשמח לדעת אם יש אפשרות לשפר עוד את הריבית באחד המסלולים.');
+    } else {
+      if (better.length) { L.push(''); L.push('במסלולים הבאים קיבלתי הצעות טובות יותר:'); L = L.concat(better); }
+      if (above.length) { L.push(''); L.push('במסלולים הבאים הריבית שהוצעה לי גבוהה מהממוצע שמפרסם בנק ישראל:'); L = L.concat(above); }
+      L.push(''); L.push('אבקש לעדכן את ההצעה כך:');
+      target.forEach(function (t) { L.push('• ' + T[t.type].name + ', ' + fmt(t.amount) + ' ל-' + t.years + ' שנים: ' + rateLabel(t.type, t.rate)); });
+      if (cur.total - tgt.total > 100) { L.push(''); L.push('לפי החישוב שלי, עדכון כזה יחסוך כ-' + fmt(cur.total - tgt.total) + ' לאורך חיי ההלוואה.'); }
+      L.push(''); L.push('אשמח להמשיך את התהליך אצלכם ולקבל הצעה מעודכנת.');
+    }
+    L.push(''); L.push('תודה רבה,'); L.push(st.name || '[השם שלכם]');
+    $('mailText').value = L.join('\n');
+  }
+
+  /* ---------- wiring ---------- */
+  $('cmpIncome').addEventListener('input', function () { st.income = digits(this.value); results(); });
+  $('cmpIncome').addEventListener('blur', function () { this.value = st.income ? st.income.toLocaleString('he-IL') : ''; });
+  $('termOffer').addEventListener('change', function () { st.termOffer = +this.value; results(); });
+  $('mailBank').addEventListener('change', function () { st.mailOffer = +this.value; results(); });
+  $('mailName').addEventListener('input', function () { st.name = this.value; results(); });
+  $('mailCopy').addEventListener('click', function () {
+    var ta = $('mailText'), done = function (msg) { $('mailCopied').textContent = msg; setTimeout(function () { $('mailCopied').textContent = ''; }, 4000); };
+    try { navigator.clipboard.writeText(ta.value).then(function () { done('הועתק ✓ עכשיו אפשר להדביק במייל'); }, function () { ta.select(); done('סמנו את הטקסט והעתיקו ידנית'); }); }
+    catch (e) { ta.select(); done('סמנו את הטקסט והעתיקו ידנית'); }
+  });
+  $('cmpAdd').addEventListener('click', function () {
+    st.offers.push({ bank: '', tracks: [{ type: 'kf', amount: 0, rate: T.kf.rate, years: 25 }, { type: 'prime', amount: 0, rate: T.prime.rate, years: 25 }] });
+    touched(); renderOffers(); results();
+    var ins = document.querySelectorAll('#offerList .camt'); if (ins.length) ins[ins.length - 2 >= 0 ? ins.length - 2 : 0].focus();
+  });
+  $('cmpClear').addEventListener('click', function () {
+    st = { example: false, income: st.income, name: st.name, showNames: st.showNames, mailOffer: null, termOffer: null, offers: [
+      { bank: '', tracks: [{ type: 'kf', amount: 0, rate: T.kf.rate, years: 25 }] }, { bank: '', tracks: [{ type: 'kf', amount: 0, rate: T.kf.rate, years: 25 }] }] };
+    renderOffers(); results();
+  });
+
+  if (!st.income && window.SIM && window.SIM.get().income) st.income = window.SIM.get().income;
+  $('cmpIncome').value = st.income ? st.income.toLocaleString('he-IL') : '';
+  $('mailName').value = st.name || '';
+  renderOffers(); results();
+})();
+</script>
+</body>
+</html>
